@@ -15,9 +15,11 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
 
-    public AuthServiceImpl(UserRepository userRepository) {
+    public AuthServiceImpl(UserRepository userRepository, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
     }
 
     @Override
@@ -32,11 +34,15 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(request.getEmail());
         user.setPassword(PasswordUtil.hashPassword(request.getPassword()));
         user.setPhone(request.getPhone());
-        user.setRole(Role.USER);
+        user.setRole(Role.USER); // default role
 
         userRepository.save(user);
 
-        String token = JwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
+
         return new AuthResponse(token, "Signup successful");
     }
 
@@ -46,11 +52,18 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Invalid credentials"));
 
-        if (!PasswordUtil.matches(request.getPassword(), user.getPassword())) {
+        if (!PasswordUtil.matches(
+                request.getPassword(),
+                user.getPassword()
+        )) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        String token = JwtUtil.generateToken(user.getEmail(), user.getRole().name());
+        String token = jwtUtil.generateToken(
+                user.getEmail(),
+                user.getRole().name()
+        );
+
         return new AuthResponse(token, "Login successful");
     }
 }

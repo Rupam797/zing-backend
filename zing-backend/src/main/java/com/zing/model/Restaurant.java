@@ -13,11 +13,10 @@ public class Restaurant {
     private String name;
     private String address;
     private String city;
-
     private boolean open;
 
     @ManyToOne
-    @JoinColumn(name = "owner_id")
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     public Restaurant() {}

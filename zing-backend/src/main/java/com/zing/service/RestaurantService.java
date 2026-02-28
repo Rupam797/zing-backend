@@ -6,11 +6,13 @@ import java.util.List;
 
 public interface RestaurantService {
 
-    Restaurant createRestaurant(Restaurant restaurant);
+    Restaurant createRestaurant(Restaurant restaurant, String ownerEmail);
 
     List<Restaurant> getAllRestaurants();
 
+    Restaurant getRestaurantById(Long restaurantId);
+
     List<Restaurant> getRestaurantsByCity(String city);
 
-    Restaurant getRestaurantById(Long restaurantId);
+    List<Restaurant> getMyRestaurants(String ownerEmail);
 }

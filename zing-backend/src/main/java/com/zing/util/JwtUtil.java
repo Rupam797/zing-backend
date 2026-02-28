@@ -1,66 +1,62 @@
 package com.zing.util;
 
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.security.Key;
+import javax.crypto.SecretKey;
 import java.util.Date;
 
+@Component
 public class JwtUtil {
 
-    private static final String SECRET_KEY =
-            "zingSecretKey123456789zingSecretKey123456789";
+    private final SecretKey key;
+    private final long expiration;
 
-    private static final long EXPIRATION_TIME =
-            1000 * 60 * 60 * 24; // 24 hours
-
-    private static final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
-
-    private JwtUtil() {
-        // prevent instantiation
+    public JwtUtil(
+            @Value("${jwt.secret}") String secret,
+            @Value("${jwt.expiration}") long expiration
+    ) {
+        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+        this.expiration = expiration;
     }
 
-    // Generate JWT Token
-    public static String generateToken(String email, String role) {
-
+    public String generateToken(String email, String role) {
         return Jwts.builder()
                 .setSubject(email)
                 .claim("role", role)
                 .setIssuedAt(new Date())
-                .setExpiration(
-                        new Date(System.currentTimeMillis() + EXPIRATION_TIME)
-                )
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Extract email from token
-    public static String extractEmail(String token) {
-        return parseToken(token).getSubject();
+    public String extractEmail(String token) {
+        return getClaims(token).getSubject();
     }
 
-    // Extract role from token
-    public static String extractRole(String token) {
-        return parseToken(token).get("role", String.class);
+    public String extractRole(String token) {
+        return getClaims(token).get("role", String.class);
     }
 
-    // Validate token
-    public static boolean validateToken(String token) {
+    public boolean validateToken(String token) {
         try {
-            parseToken(token);
+            getClaims(token);
             return true;
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
-    // Internal parser
-    private static Claims parseToken(String token) {
+    private Claims getClaims(String token) {
         return Jwts.parser()
-                .verifyWith((javax.crypto.SecretKey) key)
+                .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
     }
-
 }
