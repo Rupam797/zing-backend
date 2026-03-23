@@ -28,6 +28,13 @@ public class SecurityConfig {
                         // 🔓 Public auth APIs
                         .requestMatchers("/api/auth/**").permitAll()
 
+                        // 🔓 Swagger / OpenAPI
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html"
+                        ).permitAll()
+
                         // 🔓 Public read-only APIs
                         .requestMatchers(HttpMethod.GET,
                                 "/api/restaurants/**",
@@ -45,8 +52,8 @@ public class SecurityConfig {
                                 "/api/menus/**"
                         ).hasAuthority(Role.RESTAURANT.name())
 
-                        // 🏪 Restaurant → view own orders
-                        .requestMatchers("/api/orders/restaurant")
+                        // 🏪 Restaurant → view & manage own orders
+                        .requestMatchers("/api/orders/restaurant", "/api/orders/restaurant/**")
                         .hasAuthority(Role.RESTAURANT.name())
 
                         // 👤 User APIs

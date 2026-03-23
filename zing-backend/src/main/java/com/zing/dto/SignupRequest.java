@@ -18,6 +18,8 @@ public class SignupRequest {
     @NotBlank
     private String phone;
 
+    private String role; // USER, RESTAURANT, DELIVERY (ADMIN blocked from self-signup)
+
     public SignupRequest() {}
 
     public String getName() {
@@ -50,5 +52,13 @@ public class SignupRequest {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

@@ -1,5 +1,6 @@
 package com.zing.repository;
 
+import com.zing.constants.OrderStatus;
 import com.zing.model.Order;
 import com.zing.model.Restaurant;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,4 +14,10 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     // (Optional) Orders by restaurant id
     List<Order> findByRestaurantId(Long restaurantId);
+
+    // Orders by status list (for delivery)
+    List<Order> findByStatusIn(List<OrderStatus> statuses);
+
+    // Count by status
+    long countByStatus(OrderStatus status);
 }
