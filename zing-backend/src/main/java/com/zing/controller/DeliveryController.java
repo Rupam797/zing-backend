@@ -1,70 +1,130 @@
 package com.zing.controller;
 
 import com.zing.constants.OrderStatus;
-import com.zing.dto.ApiResponse;
 import com.zing.exception.BadRequestException;
 import com.zing.exception.ResourceNotFoundException;
 import com.zing.model.Order;
+import com.zing.model.User;
 import com.zing.repository.OrderRepository;
+import com.zing.repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.security.Principal;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/delivery")
 public class DeliveryController {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
-    public DeliveryController(OrderRepository orderRepository) {
+    public DeliveryController(OrderRepository orderRepository, UserRepository userRepository) {
         this.orderRepository = orderRepository;
+        this.userRepository = userRepository;
     }
 
-    // 📦 Get orders ready for delivery (ACCEPTED or PREPARING status)
-    @GetMapping("/orders")
+    private User getPartner(Principal principal) {
+        return userRepository.findByEmail(principal.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    // 📦 Available orders (PREPARING & not yet assigned to any partner)
+    @GetMapping("/available")
     public ResponseEntity<List<Order>> getAvailableOrders() {
-        List<Order> orders = orderRepository.findByStatusIn(
-                List.of(OrderStatus.ACCEPTED, OrderStatus.PREPARING, OrderStatus.OUT_FOR_DELIVERY)
+        List<Order> orders = orderRepository.findByStatusInAndDeliveryPartnerIsNull(
+                List.of(OrderStatus.ACCEPTED, OrderStatus.PREPARING)
         );
         return ResponseEntity.ok(orders);
     }
 
-    // ✅ Accept a delivery
-    @PutMapping("/orders/{id}/accept")
-    public ResponseEntity<Order> acceptDelivery(@PathVariable Long id) {
+    // 🚛 My active deliveries (picked up, in transit)
+    @GetMapping("/active")
+    public ResponseEntity<List<Order>> getMyActiveDeliveries(Principal principal) {
+        User partner = getPartner(principal);
+        List<Order> orders = orderRepository.findByDeliveryPartnerAndStatus(
+                partner, OrderStatus.OUT_FOR_DELIVERY
+        );
+        return ResponseEntity.ok(orders);
+    }
+
+    // 📜 My delivery history (completed)
+    @GetMapping("/history")
+    public ResponseEntity<List<Order>> getMyHistory(Principal principal) {
+        User partner = getPartner(principal);
+        List<Order> orders = orderRepository.findByDeliveryPartnerAndStatusIn(
+                partner, List.of(OrderStatus.DELIVERED)
+        );
+        return ResponseEntity.ok(orders);
+    }
+
+    // ✅ Pick up order — assign to current delivery partner
+    @PutMapping("/orders/{id}/pickup")
+    public ResponseEntity<Order> pickupOrder(@PathVariable Long id, Principal principal) {
+        User partner = getPartner(principal);
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         if (order.getStatus() != OrderStatus.PREPARING && order.getStatus() != OrderStatus.ACCEPTED) {
-            throw new BadRequestException("Order is not available for delivery");
+            throw new BadRequestException("Order is not ready for pickup");
+        }
+        if (order.getDeliveryPartner() != null) {
+            throw new BadRequestException("Order is already assigned to another delivery partner");
         }
 
+        order.setDeliveryPartner(partner);
         order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
         return ResponseEntity.ok(orderRepository.save(order));
     }
 
-    // 🔄 Mark delivery as complete
+    // 🏁 Mark as delivered
     @PutMapping("/orders/{id}/deliver")
-    public ResponseEntity<Order> markDelivered(@PathVariable Long id) {
+    public ResponseEntity<Order> markDelivered(@PathVariable Long id, Principal principal) {
+        User partner = getPartner(principal);
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
 
         if (order.getStatus() != OrderStatus.OUT_FOR_DELIVERY) {
             throw new BadRequestException("Order is not out for delivery");
         }
+        if (order.getDeliveryPartner() == null || !order.getDeliveryPartner().getId().equals(partner.getId())) {
+            throw new BadRequestException("This order is not assigned to you");
+        }
 
         order.setStatus(OrderStatus.DELIVERED);
+        order.setDeliveredAt(LocalDateTime.now());
         return ResponseEntity.ok(orderRepository.save(order));
     }
 
-    // 📊 Delivery stats
+    // 📊 My stats
     @GetMapping("/stats")
-    public ResponseEntity<ApiResponse> stats() {
-        long delivered = orderRepository.countByStatus(OrderStatus.DELIVERED);
-        long active = orderRepository.countByStatus(OrderStatus.OUT_FOR_DELIVERY);
-        return ResponseEntity.ok(
-                new ApiResponse(true, "Delivered: " + delivered + ", Active: " + active)
+    public ResponseEntity<Map<String, Object>> getMyStats(Principal principal) {
+        User partner = getPartner(principal);
+
+        long delivered = orderRepository.countByDeliveryPartnerAndStatus(partner, OrderStatus.DELIVERED);
+        long active = orderRepository.countByDeliveryPartnerAndStatus(partner, OrderStatus.OUT_FOR_DELIVERY);
+
+        // Calculate earnings (delivery fee = 10% of order total, min ₹30)
+        List<Order> completedOrders = orderRepository.findByDeliveryPartnerAndStatusIn(
+                partner, List.of(OrderStatus.DELIVERED)
         );
+        double totalEarnings = completedOrders.stream()
+                .mapToDouble(o -> Math.max(30, o.getTotalAmount() * 0.10))
+                .sum();
+
+        // Available orders count
+        long available = orderRepository.findByStatusInAndDeliveryPartnerIsNull(
+                List.of(OrderStatus.ACCEPTED, OrderStatus.PREPARING)
+        ).size();
+
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("totalDelivered", delivered);
+        stats.put("activeDeliveries", active);
+        stats.put("availableOrders", available);
+        stats.put("totalEarnings", totalEarnings);
+
+        return ResponseEntity.ok(stats);
     }
 }

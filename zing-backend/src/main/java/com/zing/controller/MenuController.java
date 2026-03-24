@@ -1,6 +1,7 @@
 package com.zing.controller;
 
 import com.zing.model.MenuItem;
+import com.zing.repository.MenuRepository;
 import com.zing.service.MenuService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,9 +13,11 @@ import java.util.List;
 public class MenuController {
 
     private final MenuService menuService;
+    private final MenuRepository menuRepository;
 
-    public MenuController(MenuService menuService) {
+    public MenuController(MenuService menuService, MenuRepository menuRepository) {
         this.menuService = menuService;
+        this.menuRepository = menuRepository;
     }
 
     @PostMapping("/{restaurantId}")
@@ -33,4 +36,10 @@ public class MenuController {
                 menuService.getMenuByRestaurant(restaurantId)
         );
     }
-}
+
+    // 🏠 Homepage: all menu items
+    @GetMapping("/all")
+    public ResponseEntity<List<MenuItem>> getAllMenuItems() {
+        return ResponseEntity.ok(menuRepository.findAll());
+    }
+}

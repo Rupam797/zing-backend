@@ -19,12 +19,18 @@ public class Order {
     @ManyToOne
     private Restaurant restaurant;
 
+    @ManyToOne
+    @JoinColumn(name = "delivery_partner_id")
+    private User deliveryPartner;
+
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
     private double totalAmount;
 
     private LocalDateTime createdAt;
+
+    private LocalDateTime deliveredAt;
 
     public Order() {}
 
@@ -52,6 +58,14 @@ public class Order {
         this.restaurant = restaurant;
     }
 
+    public User getDeliveryPartner() {
+        return deliveryPartner;
+    }
+
+    public void setDeliveryPartner(User deliveryPartner) {
+        this.deliveryPartner = deliveryPartner;
+    }
+
     public OrderStatus getStatus() {
         return status;
     }
@@ -74,5 +88,13 @@ public class Order {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
     }
 }

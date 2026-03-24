@@ -38,8 +38,12 @@ public class SecurityConfig {
                         // 🔓 Public read-only APIs
                         .requestMatchers(HttpMethod.GET,
                                 "/api/restaurants/**",
-                                "/api/menus/**"
+                                "/api/menus/**",
+                                "/uploads/**"
                         ).permitAll()
+
+                        // 📷 File uploads (any authenticated user)
+                        .requestMatchers("/api/uploads/**").authenticated()
 
                         // 🏪 Restaurant owner APIs
                         .requestMatchers(HttpMethod.POST,

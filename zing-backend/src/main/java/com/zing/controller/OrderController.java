@@ -25,6 +25,22 @@ public class OrderController {
         this.orderRepository = orderRepository;
     }
 
+    // 👤 User: view my orders
+    @GetMapping("/my")
+    public ResponseEntity<List<Order>> getMyOrders(Principal principal) {
+        return ResponseEntity.ok(
+                orderRepository.findByUserEmail(principal.getName())
+        );
+    }
+
+    // 👤 User: view single order
+    @GetMapping("/my/{id}")
+    public ResponseEntity<Order> getMyOrder(@PathVariable Long id, Principal principal) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+        return ResponseEntity.ok(order);
+    }
+
     // 👤 User: place an order
     @PostMapping
     public ResponseEntity<Order> placeOrder(

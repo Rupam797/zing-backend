@@ -1,31 +1,13 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Eye, EyeOff, Utensils, User, Store, Truck } from 'lucide-react';
+import { Eye, EyeOff, User, Store, Truck } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const ROLES = [
-  {
-    value: 'USER',
-    label: 'Customer',
-    desc: 'Order food & book tables',
-    icon: User,
-    color: 'brand',
-  },
-  {
-    value: 'RESTAURANT',
-    label: 'Restaurant Owner',
-    desc: 'Manage your restaurant',
-    icon: Store,
-    color: 'emerald',
-  },
-  {
-    value: 'DELIVERY',
-    label: 'Delivery Partner',
-    desc: 'Deliver orders & earn',
-    icon: Truck,
-    color: 'purple',
-  },
+  { value: 'USER', label: 'Customer', desc: 'Order food & book tables', icon: User },
+  { value: 'RESTAURANT', label: 'Restaurant', desc: 'Manage your restaurant', icon: Store },
+  { value: 'DELIVERY', label: 'Delivery', desc: 'Deliver orders & earn', icon: Truck },
 ];
 
 export default function SignupPage() {
@@ -41,9 +23,9 @@ export default function SignupPage() {
     setLoading(true);
     try {
       await signup(form.name, form.email, form.password, form.phone, selectedRole);
-      toast.success('Account created! Welcome to Zing 🎉');
-      const redirectMap = { USER: '/', RESTAURANT: '/dashboard', DELIVERY: '/deliveries' };
-      navigate(redirectMap[selectedRole] || '/');
+      toast.success('Account created!');
+      const redirect = { USER: '/', RESTAURANT: '/dashboard', DELIVERY: '/deliveries' };
+      navigate(redirect[selectedRole] || '/');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Signup failed');
     } finally {
@@ -51,149 +33,74 @@ export default function SignupPage() {
     }
   };
 
-  const colorMap = {
-    brand: {
-      selected: 'border-brand-500 bg-brand-500/10 ring-2 ring-brand-500/30',
-      icon: 'bg-brand-500/20 text-brand-400',
-    },
-    emerald: {
-      selected: 'border-emerald-500 bg-emerald-500/10 ring-2 ring-emerald-500/30',
-      icon: 'bg-emerald-500/20 text-emerald-400',
-    },
-    purple: {
-      selected: 'border-purple-500 bg-purple-500/10 ring-2 ring-purple-500/30',
-      icon: 'bg-purple-500/20 text-purple-400',
-    },
-  };
-
   return (
-    <div className="flex min-h-screen items-center justify-center px-4 pt-20 pb-10">
-      <div className="w-full max-w-lg">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-500 to-brand-600 shadow-xl shadow-brand-500/25">
-            <Utensils className="h-7 w-7 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold">Create an account</h1>
-          <p className="mt-2 text-surface-400">Choose your role and join Zing</p>
-        </div>
+    <div className="flex min-h-screen items-center justify-center px-4 pt-16 pb-8">
+      <div className="w-full max-w-md">
+        <h1 className="text-xl font-bold text-center" style={{ color: 'var(--text-primary)' }}>Create an account</h1>
+        <p className="mt-1 text-center text-xs" style={{ color: 'var(--text-muted)' }}>Choose your role and join Zing</p>
 
-        {/* Role Selector */}
-        <div className="mb-6 grid grid-cols-3 gap-3">
+        {/* Role selector */}
+        <div className="mt-5 grid grid-cols-3 gap-2">
           {ROLES.map((role) => {
             const Icon = role.icon;
             const isSelected = selectedRole === role.value;
-            const colors = colorMap[role.color];
             return (
-              <button
-                key={role.value}
-                type="button"
-                onClick={() => setSelectedRole(role.value)}
-                className={`group relative flex flex-col items-center rounded-2xl border p-4 text-center transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? colors.selected
-                    : 'border-surface-700 bg-surface-900/60 hover:border-surface-600 hover:bg-surface-800/60'
-                }`}
-              >
-                <div
-                  className={`mb-2 flex h-10 w-10 items-center justify-center rounded-xl transition ${
-                    isSelected ? colors.icon : 'bg-surface-800 text-surface-400 group-hover:text-surface-300'
-                  }`}
-                >
-                  <Icon className="h-5 w-5" />
-                </div>
-                <span className={`text-sm font-semibold ${isSelected ? 'text-white' : 'text-surface-300'}`}>
-                  {role.label}
-                </span>
-                <span className="mt-0.5 text-[11px] text-surface-500 leading-tight">{role.desc}</span>
-                {isSelected && (
-                  <div className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-brand-500 text-[10px] text-white">
-                    ✓
-                  </div>
-                )}
+              <button key={role.value} type="button" onClick={() => setSelectedRole(role.value)}
+                className={`relative flex flex-col items-center rounded-md border p-3 text-center transition-colors cursor-pointer ${isSelected ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10' : ''}`}
+                style={!isSelected ? { borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-card)' } : {}}>
+                <Icon className={`h-4 w-4 ${isSelected ? 'text-brand-500' : ''}`} style={!isSelected ? { color: 'var(--text-muted)' } : {}} />
+                <span className={`mt-1.5 text-[11px] font-semibold ${isSelected ? 'text-brand-600 dark:text-brand-400' : ''}`} style={!isSelected ? { color: 'var(--text-secondary)' } : {}}>{role.label}</span>
+                <span className="text-[9px] mt-0.5" style={{ color: 'var(--text-faint)' }}>{role.desc}</span>
               </button>
             );
           })}
         </div>
 
         {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="rounded-2xl border border-surface-800/60 bg-surface-900/60 p-6 backdrop-blur-sm space-y-4"
-        >
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-surface-300">Full Name</label>
-              <input
-                type="text"
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full rounded-xl border border-surface-700 bg-surface-800/60 px-4 py-3 text-sm text-white placeholder-surface-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-                placeholder="John Doe"
-              />
+              <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Full Name</label>
+              <input type="text" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })}
+                className="w-full rounded-md border px-3 py-2 text-xs outline-none focus:border-brand-500"
+                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+                placeholder="John Doe" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-surface-300">Phone</label>
-              <input
-                type="tel"
-                required
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full rounded-xl border border-surface-700 bg-surface-800/60 px-4 py-3 text-sm text-white placeholder-surface-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-                placeholder="+91 98765 43210"
-              />
+              <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Phone</label>
+              <input type="tel" required value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                className="w-full rounded-md border px-3 py-2 text-xs outline-none focus:border-brand-500"
+                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+                placeholder="+91 98765 43210" />
             </div>
           </div>
-
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-300">Email</label>
-            <input
-              type="email"
-              required
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-xl border border-surface-700 bg-surface-800/60 px-4 py-3 text-sm text-white placeholder-surface-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-              placeholder="you@example.com"
-            />
+            <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Email</label>
+            <input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })}
+              className="w-full rounded-md border px-3 py-2 text-xs outline-none focus:border-brand-500"
+              style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+              placeholder="you@example.com" />
           </div>
-
           <div>
-            <label className="mb-1.5 block text-sm font-medium text-surface-300">Password</label>
+            <label className="block text-[11px] font-medium mb-1" style={{ color: 'var(--text-secondary)' }}>Password</label>
             <div className="relative">
-              <input
-                type={showPwd ? 'text' : 'password'}
-                required
-                minLength={6}
-                value={form.password}
+              <input type={showPwd ? 'text' : 'password'} required minLength={6} value={form.password}
                 onChange={(e) => setForm({ ...form, password: e.target.value })}
-                className="w-full rounded-xl border border-surface-700 bg-surface-800/60 px-4 py-3 pr-12 text-sm text-white placeholder-surface-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPwd(!showPwd)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-surface-500 hover:text-surface-300"
-              >
-                {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                className="w-full rounded-md border px-3 py-2 pr-9 text-xs outline-none focus:border-brand-500"
+                style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
+                placeholder="••••••••" />
+              <button type="button" onClick={() => setShowPwd(!showPwd)} className="absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-faint)' }}>
+                {showPwd ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
           </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-500/25 transition hover:shadow-brand-500/40 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <button type="submit" disabled={loading}
+            className="w-full rounded-md bg-brand-500 py-2 text-xs font-medium text-white hover:bg-brand-600 transition-colors disabled:opacity-50">
             {loading ? 'Creating account…' : `Sign up as ${ROLES.find((r) => r.value === selectedRole)?.label}`}
           </button>
         </form>
-
-        <p className="mt-6 text-center text-sm text-surface-400">
-          Already have an account?{' '}
-          <Link to="/login" className="font-medium text-brand-400 hover:text-brand-300">
-            Sign in
-          </Link>
+        <p className="mt-4 text-center text-[11px]" style={{ color: 'var(--text-muted)' }}>
+          Already have an account? <Link to="/login" className="font-medium text-brand-500 hover:text-brand-600">Sign in</Link>
         </p>
       </div>
     </div>

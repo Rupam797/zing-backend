@@ -5,98 +5,54 @@ import RestaurantCard from '../components/RestaurantCard';
 
 export default function RestaurantsPage() {
   const [restaurants, setRestaurants] = useState([]);
-  const [filtered, setFiltered] = useState([]);
-  const [search, setSearch] = useState('');
-  const [cityFilter, setCityFilter] = useState('');
-  const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [city, setCity] = useState('');
 
   useEffect(() => {
-    api
-      .get('/restaurants')
-      .then((res) => {
-        setRestaurants(res.data);
-        setFiltered(res.data);
-        const uniqueCities = [...new Set(res.data.map((r) => r.city).filter(Boolean))];
-        setCities(uniqueCities);
-      })
+    api.get('/restaurants')
+      .then((r) => setRestaurants(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => {
-    let result = restaurants;
-    if (cityFilter) {
-      result = result.filter((r) => r.city === cityFilter);
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(
-        (r) =>
-          r.name?.toLowerCase().includes(q) ||
-          r.address?.toLowerCase().includes(q) ||
-          r.city?.toLowerCase().includes(q)
-      );
-    }
-    setFiltered(result);
-  }, [search, cityFilter, restaurants]);
+  const filtered = restaurants.filter(
+    (r) =>
+      r.name?.toLowerCase().includes(search.toLowerCase()) &&
+      (!city || r.city?.toLowerCase().includes(city.toLowerCase()))
+  );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pt-24 pb-16 sm:px-6">
-      {/* Header */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold">
-          Explore <span className="text-brand-500">Restaurants</span>
-        </h1>
-        <p className="mt-2 text-surface-400">Find the perfect spot for your next meal</p>
-      </div>
+    <div className="mx-auto max-w-5xl px-4 pt-20 pb-12">
+      <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Restaurants</h1>
+      <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>Browse and order from local restaurants</p>
 
       {/* Filters */}
-      <div className="mb-8 flex flex-col gap-3 sm:flex-row">
+      <div className="mt-4 flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-500" />
-          <input
-            type="text"
-            placeholder="Search restaurants…"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-xl border border-surface-700 bg-surface-900/60 py-3 pl-10 pr-4 text-sm text-white placeholder-surface-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-          />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--text-faint)' }} />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search restaurants…"
+            className="w-full rounded-md border py-2 pl-8 pr-3 text-xs outline-none focus:border-brand-500"
+            style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} />
         </div>
-
-        <div className="relative">
-          <MapPin className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-surface-500 pointer-events-none" />
-          <select
-            value={cityFilter}
-            onChange={(e) => setCityFilter(e.target.value)}
-            className="appearance-none rounded-xl border border-surface-700 bg-surface-900/60 py-3 pl-10 pr-10 text-sm text-white outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
-          >
-            <option value="">All Cities</option>
-            {cities.map((city) => (
-              <option key={city} value={city}>
-                {city}
-              </option>
-            ))}
-          </select>
+        <div className="relative w-36">
+          <MapPin className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: 'var(--text-faint)' }} />
+          <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="City"
+            className="w-full rounded-md border py-2 pl-8 pr-3 text-xs outline-none focus:border-brand-500"
+            style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }} />
         </div>
       </div>
 
-      {/* Grid */}
+      {/* Results */}
       {loading ? (
-        <div className="flex items-center justify-center py-32">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+        <div className="mt-12 text-center">
+          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 text-center">
-          <span className="text-5xl mb-4">🍜</span>
-          <h3 className="text-xl font-semibold text-surface-300">No restaurants found</h3>
-          <p className="mt-1 text-surface-500">Try a different search or city filter</p>
-        </div>
+        <div className="mt-12 text-center text-xs" style={{ color: 'var(--text-muted)' }}>No restaurants found</div>
       ) : (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
-            <RestaurantCard key={r.id} restaurant={r} />
-          ))}
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((r) => <RestaurantCard key={r.id} restaurant={r} />)}
         </div>
       )}
     </div>

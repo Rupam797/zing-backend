@@ -14,6 +14,7 @@ public class Restaurant {
     private String address;
     private String city;
     private boolean open;
+    private String imageUrl;
 
     @ManyToOne
     @JoinColumn(name = "owner_id", nullable = false)
@@ -21,51 +22,24 @@ public class Restaurant {
 
     public Restaurant() {}
 
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getName() {
-        return name;
-    }
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+    public String getCity() { return city; }
+    public void setCity(String city) { this.city = city; }
 
-    public String getAddress() {
-        return address;
-    }
+    public boolean isOpen() { return open; }
+    public void setOpen(boolean open) { this.open = open; }
 
-    public void setAddress(String address) {
-        this.address = address;
-    }
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
 
-    public String getCity() {
-        return city;
-    }
-
-    public void setCity(String city) {
-        this.city = city;
-    }
-
-    public boolean isOpen() {
-        return open;
-    }
-
-    public void setOpen(boolean open) {
-        this.open = open;
-    }
-
-    public User getOwner() {
-        return owner;
-    }
-
-    public void setOwner(User owner) {
-        this.owner = owner;
-    }
+    public User getOwner() { return owner; }
+    public void setOwner(User owner) { this.owner = owner; }
 }

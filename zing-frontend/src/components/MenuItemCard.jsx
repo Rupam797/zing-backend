@@ -1,29 +1,29 @@
 import { Plus } from 'lucide-react';
+import { imageUrl } from '../api/upload';
 
 export default function MenuItemCard({ item, onAdd }) {
+  const img = imageUrl(item.imageUrl);
+
   return (
-    <div className="group flex items-center gap-4 rounded-2xl border border-surface-800/60 bg-surface-900/60 p-4 transition-all duration-300 hover:border-brand-500/30 hover:shadow-lg hover:shadow-brand-500/5">
-      {/* Icon */}
-      <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500/20 to-brand-600/10 text-3xl">
-        🍕
+    <div className="flex items-center gap-3 rounded-lg border p-3 transition-colors" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md overflow-hidden" style={{ backgroundColor: 'var(--bg-input)' }}>
+        {img ? (
+          <img src={img} alt={item.name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="text-lg">🍕</span>
+        )}
       </div>
-
-      {/* Info */}
       <div className="flex-1 min-w-0">
-        <h4 className="font-semibold text-white truncate">{item.name}</h4>
-        <p className="mt-0.5 text-sm text-surface-400 line-clamp-2">
-          {item.description || 'Delicious menu item'}
-        </p>
-        <p className="mt-1.5 text-base font-bold text-brand-400">₹{item.price?.toFixed(2)}</p>
+        <h4 className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{item.name}</h4>
+        <p className="text-[11px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{item.description || 'Menu item'}</p>
+        <p className="text-xs font-semibold text-brand-600 mt-0.5">₹{item.price?.toFixed(2)}</p>
       </div>
-
-      {/* Add button */}
       {onAdd && (
         <button
           onClick={() => onAdd(item)}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-brand-500/30 bg-brand-500/10 text-brand-400 transition-all hover:bg-brand-500 hover:text-white hover:shadow-lg hover:shadow-brand-500/25 active:scale-95"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-brand-300 text-brand-500 hover:bg-brand-500 hover:text-white transition-colors"
         >
-          <Plus className="h-5 w-5" />
+          <Plus className="h-3.5 w-3.5" />
         </button>
       )}
     </div>
