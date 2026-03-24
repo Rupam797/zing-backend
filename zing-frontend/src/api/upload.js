@@ -22,5 +22,7 @@ export async function uploadImage(file) {
 export function imageUrl(url) {
   if (!url) return null;
   if (url.startsWith('http')) return url;
-  return url; // proxied via vite config
+  
+  const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+  return `${API_BASE_URL}${url}`;
 }
