@@ -7,7 +7,7 @@ import api from '../api/axios';
 import toast from 'react-hot-toast';
 import {
   ArrowRight, Search, SlidersHorizontal, ChevronDown,
-  Plus, Star, TrendingUp, Flame,
+  Plus, Star, TrendingUp, Flame, Zap,
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -56,17 +56,14 @@ export default function HomePage() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Build restaurant lookup
   const restaurantMap = {};
   restaurants.forEach((r) => { restaurantMap[r.id] = r; });
 
-  // Enrich items with restaurant info
   const enrichedItems = allItems.map((item) => ({
     ...item,
     restaurantData: restaurantMap[item.restaurant?.id] || item.restaurant,
   }));
 
-  // Filter
   let filtered = enrichedItems.filter((item) => item.available !== false);
   if (search) {
     const q = search.toLowerCase();
@@ -81,7 +78,6 @@ export default function HomePage() {
     );
   }
 
-  // Sort
   if (sortBy === 'priceLow') filtered.sort((a, b) => a.price - b.price);
   else if (sortBy === 'priceHigh') filtered.sort((a, b) => b.price - a.price);
   else if (sortBy === 'name') filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -103,33 +99,54 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-20 pb-12">
+    <div className="mx-auto max-w-6xl px-4 pb-16">
 
-      {/* Hero */}
-      <section className="text-center py-8">
-        <h1 className="text-2xl font-bold sm:text-3xl" style={{ color: 'var(--text-primary)' }}>
-          What would you like to <span className="text-brand-500">eat</span> today?
-        </h1>
-        <p className="mt-2 text-sm max-w-lg mx-auto" style={{ color: 'var(--text-muted)' }}>
-          Order from the best restaurants around you
-        </p>
-        {/* Search bar */}
-        <div className="mt-5 max-w-md mx-auto relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-faint)' }} />
-          <input
-            type="text"
-            placeholder="Search for food, restaurants..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full rounded-full border pl-10 pr-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
-            style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-          />
+      {/* ── Hero Banner ────────────────────────────────── */}
+      <section className="relative overflow-hidden rounded-3xl mt-20 mb-8 px-8 py-12 sm:py-16"
+        style={{ background: 'linear-gradient(135deg, #f97316 0%, #fb923c 45%, #fbbf24 100%)' }}>
+        {/* Decorative blobs */}
+        <div className="absolute -top-10 -right-10 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+
+        <div className="relative z-10 max-w-lg">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm mb-4">
+            <Zap className="h-3 w-3" fill="white" /> Fast delivery in 30 mins
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
+            Craving something<br />
+            <span className="text-yellow-300">delicious?</span>
+          </h1>
+          <p className="mt-3 text-sm text-white/80 max-w-sm">
+            Order from {restaurants.length > 0 ? `${restaurants.length}+` : 'your favourite'} restaurants and get it delivered hot to your door.
+          </p>
+
+          {/* Search bar */}
+          <div className="mt-6 max-w-md relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search for food, restaurants..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-2xl bg-white pl-11 pr-4 py-3.5 text-sm shadow-xl outline-none focus:ring-2 focus:ring-yellow-300 text-gray-800 font-medium placeholder-gray-400"
+            />
+          </div>
+        </div>
+
+        {/* Floating emoji decoration */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-end gap-3 select-none pointer-events-none">
+          {['🍕', '🍔', '🍛', '🌯'].map((e, i) => (
+            <span key={i} className="text-4xl opacity-80"
+              style={{ transform: `rotate(${-15 + i * 10}deg)`, animationDelay: `${i * 0.1}s` }}>
+              {e}
+            </span>
+          ))}
         </div>
       </section>
 
-      {/* What's on your mind? */}
-      <section className="mt-2 mb-6">
-        <h2 className="text-sm font-semibold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+      {/* ── What's on your mind? ─────────────────────── */}
+      <section className="mb-6">
+        <h2 className="text-sm font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
           <Flame className="h-4 w-4 text-brand-500" /> What's on your mind?
         </h2>
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
@@ -137,10 +154,10 @@ export default function HomePage() {
             <button
               key={cat.key}
               onClick={() => setSelectedCategory(selectedCategory === cat.label ? null : cat.label)}
-              className={`flex flex-col items-center gap-1.5 min-w-[64px] rounded-xl py-2.5 px-2 border transition-all text-center ${
+              className={`flex flex-col items-center gap-1.5 min-w-[68px] rounded-2xl py-3 px-2 border-2 transition-all text-center ${
                 selectedCategory === cat.label
-                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10'
-                  : 'hover:border-brand-300'
+                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 scale-105 shadow-sm'
+                  : 'hover:border-brand-300 dark:hover:border-brand-600'
               }`}
               style={{
                 borderColor: selectedCategory === cat.label ? undefined : 'var(--border-color)',
@@ -148,7 +165,8 @@ export default function HomePage() {
               }}
             >
               <span className="text-2xl">{cat.emoji}</span>
-              <span className="text-[10px] font-medium" style={{ color: selectedCategory === cat.label ? 'var(--color-brand-500)' : 'var(--text-secondary)' }}>
+              <span className="text-[10px] font-semibold"
+                style={{ color: selectedCategory === cat.label ? '#f97316' : 'var(--text-secondary)' }}>
                 {cat.label}
               </span>
             </button>
@@ -156,34 +174,39 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Filters & Sort */}
-      <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+      {/* ── Filters & Sort ─────────────────────────────── */}
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
             {selectedCategory ? selectedCategory : 'All Food Items'}
           </h2>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-muted)' }}>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
             {filtered.length}
           </span>
           {selectedCategory && (
-            <button onClick={() => setSelectedCategory(null)} className="text-[10px] text-brand-500 underline">Clear</button>
+            <button onClick={() => setSelectedCategory(null)} className="text-[10px] text-brand-500 hover:underline">
+              Clear
+            </button>
           )}
         </div>
         <div className="relative">
           <button
             onClick={() => setShowSort(!showSort)}
-            className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-[11px] font-medium"
+            className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-medium transition-colors hover:border-brand-300"
             style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
           >
-            <SlidersHorizontal className="h-3 w-3" /> {SORT_OPTIONS.find((s) => s.key === sortBy)?.label} <ChevronDown className="h-3 w-3" />
+            <SlidersHorizontal className="h-3 w-3" />
+            {SORT_OPTIONS.find((s) => s.key === sortBy)?.label}
+            <ChevronDown className="h-3 w-3" />
           </button>
           {showSort && (
-            <div className="absolute right-0 top-full mt-1 z-30 rounded-lg border shadow-lg w-44" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+            <div className="absolute right-0 top-full mt-1 z-30 rounded-xl border shadow-xl w-44 overflow-hidden"
+              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
               {SORT_OPTIONS.map((opt) => (
                 <button
                   key={opt.key}
                   onClick={() => { setSortBy(opt.key); setShowSort(false); }}
-                  className={`block w-full text-left px-3 py-2 text-[11px] transition-colors ${sortBy === opt.key ? 'text-brand-500 font-medium' : ''}`}
+                  className={`block w-full text-left px-4 py-2.5 text-[11px] transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${sortBy === opt.key ? 'text-brand-500 font-semibold' : ''}`}
                   style={{ color: sortBy === opt.key ? undefined : 'var(--text-secondary)' }}
                 >
                   {opt.label}
@@ -194,46 +217,52 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Food Grid */}
+      {/* ── Food Grid ─────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-3xl mb-2">🍽️</p>
-          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>No items found</p>
-          <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>Try a different search or category</p>
+        <div className="text-center py-20">
+          <p className="text-5xl mb-4">🍽️</p>
+          <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No items found</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Try a different search or category</p>
         </div>
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((item) => (
             <FoodCard key={item.id} item={item} onAdd={() => handleAdd(item)} />
           ))}
         </div>
       )}
 
-      {/* Popular Restaurants */}
+      {/* ── Popular Restaurants ─────────────────────── */}
       {restaurants.length > 0 && (
-        <section className="mt-10">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+        <section className="mt-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
               <TrendingUp className="h-4 w-4 text-brand-500" /> Popular Restaurants
             </h2>
-            <Link to="/restaurants" className="text-[11px] text-brand-500 flex items-center gap-0.5 font-medium">
+            <Link to="/restaurants" className="text-xs text-brand-500 flex items-center gap-0.5 font-semibold hover:underline underline-offset-2">
               View all <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {restaurants.slice(0, 4).map((r) => (
               <Link key={r.id} to={`/restaurants/${r.id}`}
-                className="rounded-lg border overflow-hidden transition-colors hover:border-brand-400"
+                className="group rounded-2xl border overflow-hidden transition-all hover:border-brand-400 hover:shadow-md hover:-translate-y-0.5"
                 style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <div className="h-24 flex items-center justify-center" style={{ backgroundColor: 'var(--bg-input)' }}>
+                <div className="h-28 flex items-center justify-center overflow-hidden relative"
+                  style={{ backgroundColor: 'var(--bg-input)' }}>
                   {imageUrl(r.imageUrl) ? (
-                    <img src={imageUrl(r.imageUrl)} alt={r.name} className="h-full w-full object-cover" />
+                    <img src={imageUrl(r.imageUrl)} alt={r.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
                   ) : (
-                    <span className="text-3xl">🏪</span>
+                    <span className="text-4xl">🏪</span>
+                  )}
+                  {r.open && (
+                    <span className="absolute top-2 left-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white">
+                      OPEN
+                    </span>
                   )}
                 </div>
-                <div className="p-2.5">
-                  <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>{r.name}</h3>
+                <div className="p-3">
+                  <h3 className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.name}</h3>
                   <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{r.city}</p>
                 </div>
               </Link>
@@ -250,33 +279,37 @@ function FoodCard({ item, onAdd }) {
   const restName = item.restaurantData?.name || item.restaurant?.name || 'Restaurant';
 
   return (
-    <div className="rounded-lg border overflow-hidden transition-colors hover:border-brand-300" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+    <div className="group rounded-2xl border overflow-hidden transition-all hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
+      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
       {/* Image */}
-      <div className="h-32 flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: 'var(--bg-input)' }}>
+      <div className="h-36 flex items-center justify-center overflow-hidden relative"
+        style={{ backgroundColor: 'var(--bg-input)' }}>
         {img ? (
-          <img src={img} alt={item.name} className="h-full w-full object-cover" />
+          <img src={img} alt={item.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
-          <span className="text-4xl">🍕</span>
+          <span className="text-5xl select-none">🍕</span>
         )}
-        {/* Price badge */}
-        <span className="absolute top-2 right-2 rounded-md bg-black/70 text-white text-[11px] font-bold px-2 py-0.5">
+        <span className="absolute top-2 right-2 rounded-xl bg-black/70 text-white text-[11px] font-bold px-2.5 py-1 backdrop-blur-sm">
           ₹{item.price?.toFixed(0)}
         </span>
       </div>
 
       {/* Info */}
-      <div className="p-3">
+      <div className="p-3.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{item.name}</h3>
-            <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>{item.description || 'Delicious food item'}</p>
-            <Link to={`/restaurants/${item.restaurant?.id}`} className="text-[10px] text-brand-500 mt-1 inline-block hover:underline">
+            <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{item.name}</h3>
+            <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
+              {item.description || 'Delicious food item'}
+            </p>
+            <Link to={`/restaurants/${item.restaurant?.id}`}
+              className="text-[10px] text-brand-500 mt-1 inline-block hover:underline underline-offset-1 font-medium">
               {restName}
             </Link>
           </div>
           <button
             onClick={onAdd}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white hover:bg-brand-600 transition-all hover:scale-110 active:scale-95 shadow-sm"
           >
             <Plus className="h-4 w-4" />
           </button>

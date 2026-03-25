@@ -146,8 +146,10 @@ export default function OrderTrackingPage() {
               scrollWheelZoom={false}
             >
               <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a>'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com/">CARTO</a>'
+                subdomains="abcd"
+                maxZoom={20}
               />
               {/* Restaurant marker */}
               <Marker position={restaurantPos} icon={restaurantIcon}>
