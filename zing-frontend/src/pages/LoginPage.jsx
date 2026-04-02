@@ -41,7 +41,7 @@ export default function LoginPage() {
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10"
           style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, #fff 1px, transparent 1px), radial-gradient(circle at 80% 20%, #fff 1px, transparent 1px)', backgroundSize: '50px 50px' }} />
-        
+
         {/* Logo */}
         <div className="relative z-10">
           <p className="text-3xl font-black text-white flex items-center gap-2">
