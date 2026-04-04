@@ -1,27 +1,23 @@
 package com.zing.controller;
 
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
 import com.zing.exception.BadRequestException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.nio.file.*;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/uploads")
 public class FileUploadController {
 
-    private static final String UPLOAD_DIR = "uploads";
+    private final Cloudinary cloudinary;
 
-    public FileUploadController() {
-        try {
-            Files.createDirectories(Paths.get(UPLOAD_DIR));
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create upload directory", e);
-        }
+    public FileUploadController(Cloudinary cloudinary) {
+        this.cloudinary = cloudinary;
     }
 
     @PostMapping
@@ -43,15 +39,11 @@ public class FileUploadController {
         }
 
         try {
-            String ext = getExtension(file.getOriginalFilename());
-            String filename = UUID.randomUUID() + ext;
-            Path target = Paths.get(UPLOAD_DIR, filename);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
-
-            String url = "/uploads/" + filename;
+            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            String url = uploadResult.get("secure_url").toString();
             return ResponseEntity.ok(Map.of("url", url));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file", e);
+            throw new RuntimeException("Failed to store file in Cloudinary", e);
         }
     }
 

@@ -7,22 +7,22 @@ import api from '../api/axios';
 import toast from 'react-hot-toast';
 import {
   ArrowRight, Search, SlidersHorizontal, ChevronDown,
-  Plus, Star, TrendingUp, Flame, Zap,
+  Plus, TrendingUp, Zap, MapPin, SearchX, Flame
 } from 'lucide-react';
 
 const CATEGORIES = [
-  { key: 'biryani', emoji: '🍛', label: 'Biryani' },
-  { key: 'pizza', emoji: '🍕', label: 'Pizza' },
-  { key: 'burger', emoji: '🍔', label: 'Burgers' },
-  { key: 'noodles', emoji: '🍜', label: 'Noodles' },
-  { key: 'chicken', emoji: '🍗', label: 'Chicken' },
-  { key: 'thali', emoji: '🍱', label: 'Thali' },
-  { key: 'dosa', emoji: '🥞', label: 'Dosa' },
-  { key: 'rolls', emoji: '🌯', label: 'Rolls' },
-  { key: 'cake', emoji: '🍰', label: 'Cakes' },
-  { key: 'ice', emoji: '🍦', label: 'Ice Cream' },
-  { key: 'sandwich', emoji: '🥪', label: 'Sandwich' },
-  { key: 'momos', emoji: '🥟', label: 'Momos' },
+  { key: 'biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&q=80', label: 'Biryani' },
+  { key: 'pizza', image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=200&q=80', label: 'Pizza' },
+  { key: 'burger', image: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=200&q=80', label: 'Burgers' },
+  { key: 'noodles', image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=200&q=80', label: 'Noodles' },
+  { key: 'chicken', image: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=200&q=80', label: 'Chicken' },
+  { key: 'thali', image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=200&q=80', label: 'Thali' },
+  { key: 'dosa', image: 'https://images.unsplash.com/photo-1513639776629-7b61b0ac49cb?w=200&q=80', label: 'Dosa' },
+  { key: 'rolls', image: 'https://images.unsplash.com/photo-1528736235302-52922df5c122?w=200&q=80', label: 'Rolls' },
+  { key: 'cake', image: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=200&q=80', label: 'Cakes' },
+  { key: 'ice', image: 'https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?w=200&q=80', label: 'Ice Cream' },
+  { key: 'sandwich', image: 'https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=200&q=80', label: 'Sandwich' },
+  { key: 'momos', image: 'https://images.unsplash.com/photo-1625220194771-7ebdea0b70b9?w=200&q=80', label: 'Momos' },
 ];
 
 const SORT_OPTIONS = [
@@ -31,6 +31,10 @@ const SORT_OPTIONS = [
   { key: 'priceHigh', label: 'Price: High to Low' },
   { key: 'name', label: 'Name A-Z' },
 ];
+
+const BANNER_IMAGE = "https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80";
+const PLACEHOLDER_FOOD = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80";
+const PLACEHOLDER_RESTAURANT = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80";
 
 export default function HomePage() {
   const { user } = useAuth();
@@ -93,7 +97,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent shadow-sm" />
       </div>
     );
   }
@@ -102,70 +106,74 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl px-4 pb-16">
 
       {/* ── Hero Banner ────────────────────────────────── */}
-      <section className="relative overflow-hidden rounded-3xl mt-20 mb-8 px-8 py-12 sm:py-16"
-        style={{ background: 'linear-gradient(135deg, #f97316 0%, #fb923c 45%, #fbbf24 100%)' }}>
-        {/* Decorative blobs */}
-        <div className="absolute -top-10 -right-10 h-52 w-52 rounded-full bg-white/10 blur-2xl" />
-        <div className="absolute -bottom-8 -left-8 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-
-        <div className="relative z-10 max-w-lg">
-          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm mb-4">
-            <Zap className="h-3 w-3" fill="white" /> Fast delivery in 30 mins
+      <section className="relative overflow-hidden rounded-2xl mt-20 mb-8 shadow-lg">
+        <div className="absolute inset-0 bg-black/60 z-10" />
+        <img 
+          src={BANNER_IMAGE} 
+          alt="Banner food" 
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        
+        <div className="relative z-20 px-6 py-12 sm:py-16 max-w-lg flex flex-col justify-center h-full">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-md mb-4 w-fit border border-white/30">
+            <Zap className="h-3 w-3 text-yellow-400" fill="currentColor" /> Express delivery in 30 mins
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight">
-            Craving something<br />
-            <span className="text-yellow-300">delicious?</span>
+          <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight drop-shadow-md">
+            Delicious moments,<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+              delivered directly.
+            </span>
           </h1>
-          <p className="mt-3 text-sm text-white/80 max-w-sm">
-            Order from {restaurants.length > 0 ? `${restaurants.length}+` : 'your favourite'} restaurants and get it delivered hot to your door.
+          <p className="mt-3 text-sm text-gray-200 max-w-sm drop-shadow-md">
+            Order from {restaurants.length > 0 ? `${restaurants.length}+` : 'top-rated'} local restaurants and get your cravings satisfied right at your door.
           </p>
 
           {/* Search bar */}
-          <div className="mt-6 max-w-md relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <div className="mt-6 w-full max-w-md relative group">
+            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none transition-transform group-focus-within:scale-110">
+              <Search className="h-4 w-4 text-gray-500 group-focus-within:text-brand-500 transition-colors" />
+            </div>
             <input
               type="text"
-              placeholder="Search for food, restaurants..."
+              placeholder="Search for your favorite dishes or restaurants..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-2xl bg-white pl-11 pr-4 py-3.5 text-sm shadow-xl outline-none focus:ring-2 focus:ring-yellow-300 text-gray-800 font-medium placeholder-gray-400"
+              className="block w-full pl-10 pr-3 py-3 rounded-xl border-0 ring-1 ring-inset ring-gray-300 dark:ring-gray-700 bg-white/95 dark:bg-gray-900/95 text-gray-900 dark:text-white shadow-lg focus:ring-2 focus:ring-inset focus:ring-brand-500 text-sm backdrop-blur-sm transition-all outline-none"
             />
           </div>
-        </div>
-
-        {/* Floating emoji decoration */}
-        <div className="absolute right-8 top-1/2 -translate-y-1/2 hidden sm:flex flex-col items-end gap-3 select-none pointer-events-none">
-          {['🍕', '🍔', '🍛', '🌯'].map((e, i) => (
-            <span key={i} className="text-4xl opacity-80"
-              style={{ transform: `rotate(${-15 + i * 10}deg)`, animationDelay: `${i * 0.1}s` }}>
-              {e}
-            </span>
-          ))}
         </div>
       </section>
 
       {/* ── What's on your mind? ─────────────────────── */}
-      <section className="mb-6">
-        <h2 className="text-sm font-bold mb-3 flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-          <Flame className="h-4 w-4 text-brand-500" /> What's on your mind?
-        </h2>
-        <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-thin">
+      <section className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
+             <Flame className="h-4 w-4 text-brand-500" /> What's on your mind?
+          </h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide snap-x">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.key}
               onClick={() => setSelectedCategory(selectedCategory === cat.label ? null : cat.label)}
-              className={`flex flex-col items-center gap-1.5 min-w-[68px] rounded-2xl py-3 px-2 border-2 transition-all text-center ${selectedCategory === cat.label
-                  ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10 scale-105 shadow-sm'
-                  : 'hover:border-brand-300 dark:hover:border-brand-600'
-                }`}
-              style={{
-                borderColor: selectedCategory === cat.label ? undefined : 'var(--border-color)',
-                backgroundColor: selectedCategory === cat.label ? undefined : 'var(--bg-card)',
-              }}
+              className={`snap-start flex flex-col items-center gap-2 min-w-[64px] sm:min-w-[72px] group transition-all duration-200`}
             >
-              <span className="text-2xl">{cat.emoji}</span>
-              <span className="text-[10px] font-semibold"
-                style={{ color: selectedCategory === cat.label ? '#f97316' : 'var(--text-secondary)' }}>
+              <div 
+                className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-sm transition-all duration-200 ${
+                  selectedCategory === cat.label 
+                    ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-gray-950 scale-105' 
+                    : 'group-hover:shadow-md group-hover:scale-105 ring-1 ring-gray-200 dark:ring-gray-800'
+                }`}
+              >
+                <img 
+                  src={cat.image} 
+                  alt={cat.label} 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <span className={`text-[10px] font-semibold transition-colors ${
+                selectedCategory === cat.label ? 'text-brand-500' : 'text-gray-700 dark:text-gray-300 group-hover:text-brand-500'
+              }`}>
                 {cat.label}
               </span>
             </button>
@@ -174,16 +182,16 @@ export default function HomePage() {
       </section>
 
       {/* ── Filters & Sort ─────────────────────────────── */}
-      <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+      <div className="flex items-center justify-between mb-5 flex-wrap gap-2 border-b border-gray-200 dark:border-gray-800 pb-3">
         <div className="flex items-center gap-2">
           <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-            {selectedCategory ? selectedCategory : 'All Food Items'}
+            {selectedCategory ? `${selectedCategory} near you` : 'Top Dishes Near You'}
           </h2>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">
+          <span className="inline-flex items-center rounded-full bg-brand-50 dark:bg-brand-500/10 px-2 py-0.5 text-[10px] font-semibold text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-500/20">
             {filtered.length}
           </span>
           {selectedCategory && (
-            <button onClick={() => setSelectedCategory(null)} className="text-[10px] text-brand-500 hover:underline">
+            <button onClick={() => setSelectedCategory(null)} className="text-[10px] font-medium text-brand-600 hover:text-brand-500 underline underline-offset-2">
               Clear
             </button>
           )}
@@ -191,12 +199,12 @@ export default function HomePage() {
         <div className="relative">
           <button
             onClick={() => setShowSort(!showSort)}
-            className="flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[11px] font-medium transition-colors hover:border-brand-300"
-            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)', backgroundColor: 'var(--bg-card)' }}
+            className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+            style={{ borderColor: 'var(--border-color)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
           >
-            <SlidersHorizontal className="h-3 w-3" />
-            {SORT_OPTIONS.find((s) => s.key === sortBy)?.label}
-            <ChevronDown className="h-3 w-3" />
+            <SlidersHorizontal className="h-3.5 w-3.5 text-brand-500" />
+            Sort by: <span className="font-semibold">{SORT_OPTIONS.find((s) => s.key === sortBy)?.label}</span>
+            <ChevronDown className="h-3.5 w-3.5 ml-0.5 text-gray-500" />
           </button>
           {showSort && (
             <div className="absolute right-0 top-full mt-1 z-30 rounded-xl border shadow-xl w-44 overflow-hidden"
@@ -205,8 +213,8 @@ export default function HomePage() {
                 <button
                   key={opt.key}
                   onClick={() => { setSortBy(opt.key); setShowSort(false); }}
-                  className={`block w-full text-left px-4 py-2.5 text-[11px] transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${sortBy === opt.key ? 'text-brand-500 font-semibold' : ''}`}
-                  style={{ color: sortBy === opt.key ? undefined : 'var(--text-secondary)' }}
+                  className={`block w-full text-left px-3 py-2 text-xs transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${sortBy === opt.key ? 'text-brand-500 font-bold bg-brand-50/50 dark:bg-brand-500/10' : ''}`}
+                  style={{ color: sortBy === opt.key ? undefined : 'var(--text-primary)' }}
                 >
                   {opt.label}
                 </button>
@@ -218,13 +226,23 @@ export default function HomePage() {
 
       {/* ── Food Grid ─────────────────────────────────── */}
       {filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <p className="text-5xl mb-4">🍽️</p>
-          <p className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>No items found</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Try a different search or category</p>
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-gray-300 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
+          <div className="h-12 w-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
+            <SearchX className="h-6 w-6 text-gray-400 dark:text-gray-500" />
+          </div>
+          <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">No items found</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">We couldn't find anything matching your search. Try adjusting filters.</p>
+          {(search || selectedCategory) && (
+            <button 
+              onClick={() => { setSearch(''); setSelectedCategory(null); }}
+              className="mt-3 px-3 py-1.5 bg-brand-500 text-white text-xs font-semibold rounded-md hover:bg-brand-600 transition-colors"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filtered.map((item) => (
             <FoodCard key={item.id} item={item} onAdd={() => handleAdd(item)} />
           ))}
@@ -233,36 +251,38 @@ export default function HomePage() {
 
       {/* ── Popular Restaurants ─────────────────────── */}
       {restaurants.length > 0 && (
-        <section className="mt-12">
-          <div className="flex items-center justify-between mb-4">
+        <section className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800/50">
+          <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-              <TrendingUp className="h-4 w-4 text-brand-500" /> Popular Restaurants
+              <TrendingUp className="h-4 w-4 text-brand-500" /> Top Rated Restaurants
             </h2>
-            <Link to="/restaurants" className="text-xs text-brand-500 flex items-center gap-0.5 font-semibold hover:underline underline-offset-2">
-              View all <ArrowRight className="h-3 w-3" />
+            <Link to="/restaurants" className="text-[11px] text-brand-600 dark:text-brand-400 flex items-center gap-1 font-semibold hover:text-brand-500 transition-colors group">
+              See all <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {restaurants.slice(0, 4).map((r) => (
               <Link key={r.id} to={`/restaurants/${r.id}`}
-                className="group rounded-2xl border overflow-hidden transition-all hover:border-brand-400 hover:shadow-md hover:-translate-y-0.5"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <div className="h-28 flex items-center justify-center overflow-hidden relative"
-                  style={{ backgroundColor: 'var(--bg-input)' }}>
-                  {imageUrl(r.imageUrl) ? (
-                    <img src={imageUrl(r.imageUrl)} alt={r.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                  ) : (
-                    <span className="text-4xl">🏪</span>
-                  )}
+                className="group flex flex-col rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ring-1 ring-gray-200 dark:ring-gray-800 bg-white dark:bg-gray-900 border"
+                style={{ borderColor: 'var(--border-color)' }}>
+                <div className="h-28 w-full overflow-hidden relative">
+                  <img 
+                    src={imageUrl(r.imageUrl) || PLACEHOLDER_RESTAURANT} 
+                    alt={r.name} 
+                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   {r.open && (
-                    <span className="absolute top-2 left-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[9px] font-bold text-white">
-                      OPEN
+                    <span className="absolute top-2 left-2 rounded bg-emerald-500 shadow-sm px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
+                      Open Now
                     </span>
                   )}
                 </div>
-                <div className="p-3">
-                  <h3 className="text-xs font-bold truncate" style={{ color: 'var(--text-primary)' }}>{r.name}</h3>
-                  <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-muted)' }}>{r.city}</p>
+                <div className="p-3 flex-1 flex flex-col">
+                  <h3 className="text-xs font-bold truncate text-gray-900 dark:text-white group-hover:text-brand-500 transition-colors">{r.name}</h3>
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1 truncate">
+                    <MapPin className="h-2.5 w-2.5 shrink-0" /> {r.city || 'Local Area'}
+                  </p>
                 </div>
               </Link>
             ))}
@@ -274,46 +294,51 @@ export default function HomePage() {
 }
 
 function FoodCard({ item, onAdd }) {
-  const img = imageUrl(item.imageUrl);
-  const restName = item.restaurantData?.name || item.restaurant?.name || 'Restaurant';
+  const img = imageUrl(item.imageUrl) || PLACEHOLDER_FOOD;
+  const restName = item.restaurantData?.name || item.restaurant?.name || 'Local Restaurant';
 
   return (
-    <div className="group rounded-2xl border overflow-hidden transition-all hover:border-brand-300 hover:shadow-md hover:-translate-y-0.5"
-      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+    <div className="group flex flex-col bg-white dark:bg-gray-900 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 ring-1 ring-gray-200 dark:ring-gray-800 border"
+      style={{ borderColor: 'var(--border-color)' }}>
       {/* Image */}
-      <div className="h-36 flex items-center justify-center overflow-hidden relative"
-        style={{ backgroundColor: 'var(--bg-input)' }}>
-        {img ? (
-          <img src={img} alt={item.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
-          <span className="text-5xl select-none">🍕</span>
-        )}
-        <span className="absolute top-2 right-2 rounded-xl bg-black/70 text-white text-[11px] font-bold px-2.5 py-1 backdrop-blur-sm">
+      <div className="h-36 w-full overflow-hidden relative bg-gray-100 dark:bg-gray-800">
+        <img 
+          src={img} 
+          alt={item.name} 
+          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"/>
+        <div className="absolute bottom-2 left-2 rounded-md bg-white/95 dark:bg-gray-900/95 text-gray-900 dark:text-white text-xs font-bold px-2 py-1 shadow-sm backdrop-blur-sm border border-gray-100 dark:border-gray-800">
           ₹{item.price?.toFixed(0)}
-        </span>
+        </div>
       </div>
 
       {/* Info */}
-      <div className="p-3.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <h3 className="text-sm font-bold truncate" style={{ color: 'var(--text-primary)' }}>{item.name}</h3>
-            <p className="text-[10px] mt-0.5 truncate" style={{ color: 'var(--text-muted)' }}>
-              {item.description || 'Delicious food item'}
-            </p>
-            <Link to={`/restaurants/${item.restaurant?.id}`}
-              className="text-[10px] text-brand-500 mt-1 inline-block hover:underline underline-offset-1 font-medium">
-              {restName}
-            </Link>
+      <div className="p-3 flex-1 flex flex-col">
+        <div className="flex-1">
+          <div className="flex justify-between items-start gap-1.5">
+            <h3 className="text-sm font-bold text-gray-900 dark:text-white line-clamp-1 group-hover:text-brand-500 transition-colors">{item.name}</h3>
           </div>
+          <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 line-clamp-2 min-h-[28px]">
+            {item.description || 'A delicious and freshly prepared meal full of authentic flavors.'}
+          </p>
+        </div>
+        
+        <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
+          <Link to={`/restaurants/${item.restaurant?.id}`}
+            className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:text-brand-500 dark:hover:text-brand-400 transition-colors truncate max-w-[120px]">
+            <MapPin className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate">{restName}</span>
+          </Link>
           <button
             onClick={onAdd}
-            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-500 text-white hover:bg-brand-600 transition-all hover:scale-110 active:scale-95 shadow-sm"
+            className="flex items-center justify-center gap-1 rounded bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 px-2 py-1.5 text-[10px] font-bold hover:bg-brand-500 hover:text-white dark:hover:bg-brand-500 dark:hover:text-white transition-colors"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3" /> Add
           </button>
         </div>
       </div>
     </div>
   );
 }
+
