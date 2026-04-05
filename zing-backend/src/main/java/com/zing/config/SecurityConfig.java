@@ -19,6 +19,7 @@ public class SecurityConfig {
     ) throws Exception {
 
         http
+                .cors(org.springframework.security.config.Customizer.withDefaults())
                 // JWT based → no CSRF
                 .csrf(csrf -> csrf.disable())
 
