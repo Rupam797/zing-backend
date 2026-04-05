@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import com.zing.dto.MenuItemDTO;
+import java.util.stream.Collectors;
+
 @RestController
 @RequestMapping("/api/menus")
 public class MenuController {
@@ -37,9 +40,23 @@ public class MenuController {
         );
     }
 
-    // 🏠 Homepage: all menu items
+    // 🏠 Homepage: all menu items (Optimized with Join Fetch & DTO)
     @GetMapping("/all")
-    public ResponseEntity<List<MenuItem>> getAllMenuItems() {
-        return ResponseEntity.ok(menuRepository.findAll());
+    public ResponseEntity<List<MenuItemDTO>> getAllMenuItems() {
+        List<MenuItemDTO> dtos = menuRepository.findAllWithRestaurant().stream()
+                .map(item -> new MenuItemDTO(
+                        item.getId(),
+                        item.getName(),
+                        item.getDescription(),
+                        item.getPrice(),
+                        item.isAvailable(),
+                        item.getImageUrl(),
+                        new MenuItemDTO.RestaurantSummaryDTO(
+                                item.getRestaurant() != null ? item.getRestaurant().getId() : null,
+                                item.getRestaurant() != null ? item.getRestaurant().getName() : "Unknown"
+                        )
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
 }

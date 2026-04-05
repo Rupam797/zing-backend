@@ -94,13 +94,7 @@ export default function HomePage() {
     addItem(item, rest);
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent shadow-sm" />
-      </div>
-    );
-  }
+  // (Optionally keep a small spinner at the top or just use inline skeletons below)
 
   return (
     <div className="mx-auto max-w-6xl px-4 pb-16">
@@ -225,7 +219,13 @@ export default function HomePage() {
       </div>
 
       {/* ── Food Grid ─────────────────────────────────── */}
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 h-64 rounded-xl"/>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 px-4 text-center rounded-xl border border-dashed border-gray-300 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-900/20">
           <div className="h-12 w-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-3">
             <SearchX className="h-6 w-6 text-gray-400 dark:text-gray-500" />
@@ -250,7 +250,7 @@ export default function HomePage() {
       )}
 
       {/* ── Popular Restaurants ─────────────────────── */}
-      {restaurants.length > 0 && (
+      {!loading && restaurants.length > 0 && (
         <section className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800/50">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>

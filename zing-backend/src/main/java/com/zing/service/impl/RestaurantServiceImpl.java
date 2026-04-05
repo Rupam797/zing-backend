@@ -41,7 +41,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     // 🔓 Public / USER
     @Override
     public List<Restaurant> getAllRestaurants() {
-        return restaurantRepository.findAll();
+        return restaurantRepository.findAllWithOwner();
     }
 
     // 🔓 Public / USER
