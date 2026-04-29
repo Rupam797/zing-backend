@@ -69,6 +69,13 @@ public class SecurityConfig {
                         .requestMatchers("/api/delivery/**")
                         .hasAuthority(Role.DELIVERY.name())
 
+                        // 📍 Delivery location read — accessible by customers tracking their order
+                        .requestMatchers(HttpMethod.GET, "/api/tracking/**")
+                        .hasAnyAuthority(Role.USER.name(), Role.DELIVERY.name())
+
+                        // 🔌 WebSocket endpoints
+                        .requestMatchers("/ws/**").permitAll()
+
                         // 👑 Admin APIs
                         .requestMatchers("/api/admin/**")
                         .hasAuthority(Role.ADMIN.name())

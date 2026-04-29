@@ -127,4 +127,50 @@ public class DeliveryController {
 
         return ResponseEntity.ok(stats);
     }
+
+    // 📍 Update delivery partner's live GPS location (persisted for reconnection)
+    @PutMapping("/orders/{id}/location")
+    public ResponseEntity<Map<String, Object>> updateLocation(
+            @PathVariable Long id,
+            @RequestBody Map<String, Double> coords,
+            Principal principal
+    ) {
+        User partner = getPartner(principal);
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (order.getDeliveryPartner() == null || !order.getDeliveryPartner().getId().equals(partner.getId())) {
+            throw new BadRequestException("This order is not assigned to you");
+        }
+
+        Double lat = coords.get("lat");
+        Double lng = coords.get("lng");
+        if (lat != null && lng != null) {
+            order.setDeliveryLat(lat);
+            order.setDeliveryLng(lng);
+            orderRepository.save(order);
+        }
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("orderId", id);
+        response.put("lat", lat);
+        response.put("lng", lng);
+        response.put("updatedAt", LocalDateTime.now());
+        return ResponseEntity.ok(response);
+    }
+
+    // 📍 Get delivery partner's last known location (for customer page load / reconnection)
+    @GetMapping("/orders/{id}/location")
+    public ResponseEntity<Map<String, Object>> getLocation(@PathVariable Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("orderId", id);
+        response.put("lat", order.getDeliveryLat());
+        response.put("lng", order.getDeliveryLng());
+        response.put("status", order.getStatus());
+        response.put("partnerName", order.getDeliveryPartner() != null ? order.getDeliveryPartner().getName() : null);
+        return ResponseEntity.ok(response);
+    }
 }

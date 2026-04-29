@@ -32,6 +32,13 @@ public class Order {
 
     private LocalDateTime deliveredAt;
 
+    // Real-time delivery tracking fields
+    private Double deliveryLat;
+    private Double deliveryLng;
+    private Double customerLat;
+    private Double customerLng;
+    private String deliveryAddress;
+
     public Order() {}
 
     public Long getId() {
@@ -97,4 +104,19 @@ public class Order {
     public void setDeliveredAt(LocalDateTime deliveredAt) {
         this.deliveredAt = deliveredAt;
     }
+
+    public Double getDeliveryLat() { return deliveryLat; }
+    public void setDeliveryLat(Double deliveryLat) { this.deliveryLat = deliveryLat; }
+
+    public Double getDeliveryLng() { return deliveryLng; }
+    public void setDeliveryLng(Double deliveryLng) { this.deliveryLng = deliveryLng; }
+
+    public Double getCustomerLat() { return customerLat; }
+    public void setCustomerLat(Double customerLat) { this.customerLat = customerLat; }
+
+    public Double getCustomerLng() { return customerLng; }
+    public void setCustomerLng(Double customerLng) { this.customerLng = customerLng; }
+
+    public String getDeliveryAddress() { return deliveryAddress; }
+    public void setDeliveryAddress(String deliveryAddress) { this.deliveryAddress = deliveryAddress; }
 }

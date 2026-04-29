@@ -2,8 +2,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { ShoppingCart, LogOut, User, Utensils, Menu, X, Sun, Moon } from 'lucide-react';
+import { ShoppingCart, LogOut, User, Utensils, Menu, X, Sun, Moon, MapPin } from 'lucide-react';
 import { useState } from 'react';
+import useGeolocation from '../hooks/useGeolocation';
+import useReverseGeocode from '../hooks/useReverseGeocode';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -11,6 +13,13 @@ export default function Navbar() {
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+
+  // Auto-detect location
+  const geo = useGeolocation({ enabled: true });
+  const reverseGeo = useReverseGeocode(geo.lat, geo.lng);
+  const locationLabel = reverseGeo.address
+    ? `${reverseGeo.address}${reverseGeo.city ? `, ${reverseGeo.city}` : ''}`
+    : reverseGeo.loading ? 'Detecting…' : null;
 
   const handleLogout = () => {
     logout();
@@ -30,6 +39,19 @@ export default function Navbar() {
             Zing
           </span>
         </Link>
+
+        {/* Location indicator */}
+        {locationLabel && (
+          <div
+            className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium max-w-[200px] cursor-default"
+            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}
+            title={reverseGeo.fullAddress || locationLabel}
+          >
+            <MapPin className="h-3 w-3 shrink-0 text-brand-500" />
+            <span className="truncate">{locationLabel}</span>
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0 animate-pulse" />
+          </div>
+        )}
 
         {/* Desktop Nav */}
         <div className="hidden md:flex items-center gap-0.5">

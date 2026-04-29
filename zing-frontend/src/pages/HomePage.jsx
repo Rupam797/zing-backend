@@ -4,11 +4,27 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { imageUrl } from '../api/upload';
 import api from '../api/axios';
+import useGeolocation from '../hooks/useGeolocation';
 import toast from 'react-hot-toast';
 import {
   ArrowRight, Search, SlidersHorizontal, ChevronDown,
-  Plus, TrendingUp, Zap, MapPin, SearchX, Flame
+  Plus, TrendingUp, Zap, MapPin, SearchX, Flame, Navigation
 } from 'lucide-react';
+import useReverseGeocode from '../hooks/useReverseGeocode';
+
+function haversineKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function formatDist(d) {
+  if (d === null || d === undefined) return null;
+  if (d < 1) return `${Math.round(d * 1000)}m`;
+  return `${d.toFixed(1)}km`;
+}
 
 const CATEGORIES = [
   { key: 'biryani', image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=200&q=80', label: 'Biryani' },
@@ -27,6 +43,7 @@ const CATEGORIES = [
 
 const SORT_OPTIONS = [
   { key: 'relevance', label: 'Relevance' },
+  { key: 'nearby', label: 'Nearest First' },
   { key: 'priceLow', label: 'Price: Low to High' },
   { key: 'priceHigh', label: 'Price: High to Low' },
   { key: 'name', label: 'Name A-Z' },
@@ -40,6 +57,11 @@ export default function HomePage() {
   const { user } = useAuth();
   const { addItem } = useCart();
   const navigate = useNavigate();
+  const geo = useGeolocation({ enabled: true });
+  const reverseGeo = useReverseGeocode(geo.lat, geo.lng);
+  const userLocation = reverseGeo.address
+    ? `${reverseGeo.address}${reverseGeo.city ? `, ${reverseGeo.city}` : ''}`
+    : null;
 
   const [allItems, setAllItems] = useState([]);
   const [restaurants, setRestaurants] = useState([]);
@@ -49,6 +71,19 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [sortBy, setSortBy] = useState('relevance');
   const [showSort, setShowSort] = useState(false);
+  const [distances, setDistances] = useState({});
+
+  // Calculate distances when GPS available
+  useEffect(() => {
+    if (!geo.lat || !geo.lng || restaurants.length === 0) return;
+    const dist = {};
+    restaurants.forEach((r) => {
+      if (r.latitude && r.longitude) {
+        dist[r.id] = Math.round(haversineKm(geo.lat, geo.lng, r.latitude, r.longitude) * 10) / 10;
+      }
+    });
+    setDistances(dist);
+  }, [geo.lat, geo.lng, restaurants]);
 
   useEffect(() => {
     Promise.all([api.get('/menus/all'), api.get('/restaurants')])
@@ -85,6 +120,13 @@ export default function HomePage() {
   if (sortBy === 'priceLow') filtered.sort((a, b) => a.price - b.price);
   else if (sortBy === 'priceHigh') filtered.sort((a, b) => b.price - a.price);
   else if (sortBy === 'name') filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  else if (sortBy === 'nearby' && Object.keys(distances).length > 0) {
+    filtered.sort((a, b) => {
+      const da = distances[a.restaurant?.id] ?? 9999;
+      const db = distances[b.restaurant?.id] ?? 9999;
+      return da - db;
+    });
+  }
 
   const handleAdd = (item) => {
     if (!user) { navigate('/login'); return; }
@@ -112,6 +154,13 @@ export default function HomePage() {
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-md mb-4 w-fit border border-white/30">
             <Zap className="h-3 w-3 text-yellow-400" fill="currentColor" /> Express delivery in 30 mins
           </div>
+          {userLocation && (
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-medium text-white backdrop-blur-md mb-3 w-fit border border-white/20">
+              <MapPin className="h-3 w-3 text-emerald-400" />
+              <span className="truncate max-w-[200px]">{userLocation}</span>
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            </div>
+          )}
           <h1 className="text-3xl sm:text-4xl font-black text-white leading-tight tracking-tight drop-shadow-md">
             Delicious moments,<br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
@@ -119,7 +168,10 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="mt-3 text-sm text-gray-200 max-w-sm drop-shadow-md">
-            Order from {restaurants.length > 0 ? `${restaurants.length}+` : 'top-rated'} local restaurants and get your cravings satisfied right at your door.
+            {userLocation
+              ? `Delivering to ${userLocation} from ${restaurants.length > 0 ? `${restaurants.length}+` : ''} restaurants near you.`
+              : `Order from ${restaurants.length > 0 ? `${restaurants.length}+` : 'top-rated'} local restaurants and get your cravings satisfied right at your door.`
+            }
           </p>
 
           {/* Search bar */}
@@ -249,19 +301,26 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* ── Popular Restaurants ─────────────────────── */}
+      {/* ── Nearby Restaurants ─────────────────────── */}
       {!loading && restaurants.length > 0 && (
         <section className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800/50">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-              <TrendingUp className="h-4 w-4 text-brand-500" /> Top Rated Restaurants
+              {Object.keys(distances).length > 0 ? (
+                <><Navigation className="h-4 w-4 text-brand-500" /> Restaurants Near You</>
+              ) : (
+                <><TrendingUp className="h-4 w-4 text-brand-500" /> Top Restaurants</>
+              )}
             </h2>
             <Link to="/restaurants" className="text-[11px] text-brand-600 dark:text-brand-400 flex items-center gap-1 font-semibold hover:text-brand-500 transition-colors group">
               See all <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {restaurants.slice(0, 4).map((r) => (
+            {[...restaurants]
+              .sort((a, b) => (distances[a.id] ?? 9999) - (distances[b.id] ?? 9999))
+              .slice(0, 4)
+              .map((r) => (
               <Link key={r.id} to={`/restaurants/${r.id}`}
                 className="group flex flex-col rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ring-1 ring-gray-200 dark:ring-gray-800 bg-white dark:bg-gray-900 border"
                 style={{ borderColor: 'var(--border-color)' }}>
@@ -277,11 +336,23 @@ export default function HomePage() {
                       Open Now
                     </span>
                   )}
+                  {distances[r.id] != null && (
+                    <span className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
+                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
+                      <Navigation className="h-2.5 w-2.5" />
+                      {formatDist(distances[r.id])}
+                    </span>
+                  )}
                 </div>
                 <div className="p-3 flex-1 flex flex-col">
                   <h3 className="text-xs font-bold truncate text-gray-900 dark:text-white group-hover:text-brand-500 transition-colors">{r.name}</h3>
                   <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1 truncate">
                     <MapPin className="h-2.5 w-2.5 shrink-0" /> {r.city || 'Local Area'}
+                    {distances[r.id] != null && (
+                      <span className="ml-auto text-[9px] font-medium" style={{ color: '#8b5cf6' }}>
+                        {formatDist(distances[r.id])} away
+                      </span>
+                    )}
                   </p>
                 </div>
               </Link>

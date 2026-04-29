@@ -5,8 +5,10 @@ import { uploadImage, imageUrl } from '../api/upload';
 import toast from 'react-hot-toast';
 import {
   Store, Package, PlusCircle, ChevronDown, ChevronUp,
-  Check, X, ChefHat, RefreshCw, Camera, Image,
+  Check, X, ChefHat, RefreshCw, Camera, Image, MapPin, Loader2,
 } from 'lucide-react';
+import useGeolocation from '../hooks/useGeolocation';
+import useReverseGeocode from '../hooks/useReverseGeocode';
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -19,6 +21,27 @@ export default function DashboardPage() {
   const [creating, setCreating] = useState(false);
   const [openMenuFormId, setOpenMenuFormId] = useState(null);
   const restaurantFileRef = useRef(null);
+
+  // GPS for auto-locating restaurant
+  const geo = useGeolocation({ enabled: showCreateForm, highAccuracy: true });
+  const reverseGeo = useReverseGeocode(geo.lat, geo.lng);
+  const geoFilledRef = useRef(false);
+
+  // Auto-fill address & city when GPS resolves
+  useEffect(() => {
+    if (geoFilledRef.current || !reverseGeo.address) return;
+    setNewRestaurant((prev) => ({
+      ...prev,
+      address: prev.address || reverseGeo.address,
+      city: prev.city || reverseGeo.city,
+    }));
+    geoFilledRef.current = true;
+  }, [reverseGeo.address, reverseGeo.city]);
+
+  // Reset auto-fill flag when form is reopened
+  useEffect(() => {
+    if (!showCreateForm) geoFilledRef.current = false;
+  }, [showCreateForm]);
 
   useEffect(() => { loadData(); }, []);
 
@@ -38,7 +61,12 @@ export default function DashboardPage() {
       if (restaurantImage) {
         imgUrl = await uploadImage(restaurantImage);
       }
-      await api.post('/restaurants', { ...newRestaurant, imageUrl: imgUrl });
+      await api.post('/restaurants', {
+        ...newRestaurant,
+        imageUrl: imgUrl,
+        latitude: geo.lat || null,
+        longitude: geo.lng || null,
+      });
       toast.success('Restaurant created!');
       setNewRestaurant({ name: '', address: '', city: '', open: true });
       setRestaurantImage(null);
@@ -121,6 +149,34 @@ export default function DashboardPage() {
                   <img src={URL.createObjectURL(restaurantImage)} alt="Preview" className="h-10 w-10 rounded-md object-cover" />
                 )}
               </div>
+            </div>
+            {/* GPS location indicator */}
+            <div className="rounded-md border p-2.5 flex items-center gap-2" style={{ borderColor: 'var(--border-color)', backgroundColor: 'var(--bg-secondary)' }}>
+              <MapPin className="h-4 w-4 shrink-0" style={{ color: geo.lat ? '#22c55e' : 'var(--text-faint)' }} />
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-medium" style={{ color: 'var(--text-primary)' }}>
+                  {reverseGeo.address
+                    ? `📍 ${reverseGeo.address}${reverseGeo.city ? `, ${reverseGeo.city}` : ''}`
+                    : geo.lat
+                      ? (reverseGeo.loading ? '📍 Detecting address…' : '📍 Location detected')
+                      : geo.loading
+                        ? 'Detecting your location…'
+                        : 'Location unavailable'}
+                </p>
+                {geo.lat && (
+                  <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>
+                    {geo.lat.toFixed(5)}, {geo.lng.toFixed(5)} • Accuracy: {geo.accuracy ? `${Math.round(geo.accuracy)}m` : '—'}
+                    {reverseGeo.address && ' • Address auto-filled ✓'}
+                  </p>
+                )}
+                {geo.error && (
+                  <p className="text-[10px] text-amber-500">
+                    {geo.error.includes('denied') ? 'Enable location to auto-fill address' : 'GPS unavailable — enter address manually'}
+                  </p>
+                )}
+              </div>
+              {(geo.loading || reverseGeo.loading) && <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: 'var(--text-faint)' }} />}
+              {geo.lat && !reverseGeo.loading && <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />}
             </div>
             <div className="flex justify-end gap-2">
               <button type="button" onClick={() => setShowCreateForm(false)} className="rounded-md border px-3 py-1.5 text-xs" style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>Cancel</button>
