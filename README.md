@@ -28,6 +28,34 @@
 
 **Zing** is a production-ready, real-time food delivery platform. Customers can browse restaurants, place orders, book tables, and track their delivery on a live map. Restaurant owners manage menus and incoming orders through a dashboard. Delivery partners pick up orders and broadcast their GPS location over WebSockets. Admins oversee users, restaurants, and system stats.
 
+## Screenshots
+
+<div align="center">
+  <img src="docs/images/home_page.png" alt="Zing Home Page" width="800"/>
+  <br/>
+  <em>Customer Homepage with Restaurant Discovery</em>
+  <br/><br/>
+  
+  <img src="docs/images/live_tracking.png" alt="Live Order Tracking" width="800"/>
+  <br/>
+  <em>Live GPS Order Tracking & Real-Time Status</em>
+  <br/><br/>
+  
+  <img src="docs/images/restaurant_dashboard.png" alt="Restaurant Dashboard" width="800"/>
+  <br/>
+  <em>Restaurant Dashboard with Earnings & Order Management</em>
+  <br/><br/>
+  
+  <img src="docs/images/delivery_partner_tracking.png" alt="Delivery Partner Tracking" width="800"/>
+  <br/>
+  <em>Delivery Partner Live GPS Tracking Map</em>
+  <br/><br/>
+  
+  <img src="docs/images/delivery_dashboard.png" alt="Delivery Dashboard" width="800"/>
+  <br/>
+  <em>Delivery Partner Earnings & Active Orders Dashboard</em>
+</div>
+
 ---
 
 ## Tech Stack
