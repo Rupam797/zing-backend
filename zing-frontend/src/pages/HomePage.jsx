@@ -144,12 +144,12 @@ export default function HomePage() {
       {/* ── Hero Banner ────────────────────────────────── */}
       <section className="relative overflow-hidden rounded-2xl mt-20 mb-8 shadow-lg">
         <div className="absolute inset-0 bg-black/60 z-10" />
-        <img 
-          src={BANNER_IMAGE} 
-          alt="Banner food" 
+        <img
+          src={BANNER_IMAGE}
+          alt="Banner food"
           className="absolute inset-0 w-full h-full object-cover"
         />
-        
+
         <div className="relative z-20 px-6 py-12 sm:py-16 max-w-lg flex flex-col justify-center h-full">
           <div className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-[10px] font-semibold text-white backdrop-blur-md mb-4 w-fit border border-white/30">
             <Zap className="h-3 w-3 text-yellow-400" fill="currentColor" /> Express delivery in 30 mins
@@ -194,7 +194,7 @@ export default function HomePage() {
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-bold flex items-center gap-1.5" style={{ color: 'var(--text-primary)' }}>
-             <Flame className="h-4 w-4 text-brand-500" /> What's on your mind?
+            <Flame className="h-4 w-4 text-brand-500" /> What's on your mind?
           </h2>
         </div>
         <div className="flex gap-3 overflow-x-auto pb-3 scrollbar-hide snap-x">
@@ -204,22 +204,20 @@ export default function HomePage() {
               onClick={() => setSelectedCategory(selectedCategory === cat.label ? null : cat.label)}
               className={`snap-start flex flex-col items-center gap-2 min-w-[64px] sm:min-w-[72px] group transition-all duration-200`}
             >
-              <div 
-                className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-sm transition-all duration-200 ${
-                  selectedCategory === cat.label 
-                    ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-gray-950 scale-105' 
+              <div
+                className={`relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden shadow-sm transition-all duration-200 ${selectedCategory === cat.label
+                    ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-gray-950 scale-105'
                     : 'group-hover:shadow-md group-hover:scale-105 ring-1 ring-gray-200 dark:ring-gray-800'
-                }`}
+                  }`}
               >
-                <img 
-                  src={cat.image} 
-                  alt={cat.label} 
+                <img
+                  src={cat.image}
+                  alt={cat.label}
                   className="w-full h-full object-cover"
                 />
               </div>
-              <span className={`text-[10px] font-semibold transition-colors ${
-                selectedCategory === cat.label ? 'text-brand-500' : 'text-gray-700 dark:text-gray-300 group-hover:text-brand-500'
-              }`}>
+              <span className={`text-[10px] font-semibold transition-colors ${selectedCategory === cat.label ? 'text-brand-500' : 'text-gray-700 dark:text-gray-300 group-hover:text-brand-500'
+                }`}>
                 {cat.label}
               </span>
             </button>
@@ -274,7 +272,7 @@ export default function HomePage() {
       {loading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 h-64 rounded-xl"/>
+            <div key={i} className="animate-pulse bg-gray-100 dark:bg-gray-800 h-64 rounded-xl" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
@@ -285,7 +283,7 @@ export default function HomePage() {
           <h3 className="text-sm font-bold text-gray-900 dark:text-gray-100 mb-1">No items found</h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 max-w-xs">We couldn't find anything matching your search. Try adjusting filters.</p>
           {(search || selectedCategory) && (
-            <button 
+            <button
               onClick={() => { setSearch(''); setSelectedCategory(null); }}
               className="mt-3 px-3 py-1.5 bg-brand-500 text-white text-xs font-semibold rounded-md hover:bg-brand-600 transition-colors"
             >
@@ -321,42 +319,42 @@ export default function HomePage() {
               .sort((a, b) => (distances[a.id] ?? 9999) - (distances[b.id] ?? 9999))
               .slice(0, 4)
               .map((r) => (
-              <Link key={r.id} to={`/restaurants/${r.id}`}
-                className="group flex flex-col rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ring-1 ring-gray-200 dark:ring-gray-800 bg-white dark:bg-gray-900 border"
-                style={{ borderColor: 'var(--border-color)' }}>
-                <div className="h-28 w-full overflow-hidden relative">
-                  <img 
-                    src={imageUrl(r.imageUrl) || PLACEHOLDER_RESTAURANT} 
-                    alt={r.name} 
-                    className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                  {r.open && (
-                    <span className="absolute top-2 left-2 rounded bg-emerald-500 shadow-sm px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
-                      Open Now
-                    </span>
-                  )}
-                  {distances[r.id] != null && (
-                    <span className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
-                      style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
-                      <Navigation className="h-2.5 w-2.5" />
-                      {formatDist(distances[r.id])}
-                    </span>
-                  )}
-                </div>
-                <div className="p-3 flex-1 flex flex-col">
-                  <h3 className="text-xs font-bold truncate text-gray-900 dark:text-white group-hover:text-brand-500 transition-colors">{r.name}</h3>
-                  <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1 truncate">
-                    <MapPin className="h-2.5 w-2.5 shrink-0" /> {r.city || 'Local Area'}
-                    {distances[r.id] != null && (
-                      <span className="ml-auto text-[9px] font-medium" style={{ color: '#8b5cf6' }}>
-                        {formatDist(distances[r.id])} away
+                <Link key={r.id} to={`/restaurants/${r.id}`}
+                  className="group flex flex-col rounded-xl overflow-hidden transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ring-1 ring-gray-200 dark:ring-gray-800 bg-white dark:bg-gray-900 border"
+                  style={{ borderColor: 'var(--border-color)' }}>
+                  <div className="h-28 w-full overflow-hidden relative">
+                    <img
+                      src={imageUrl(r.imageUrl) || PLACEHOLDER_RESTAURANT}
+                      alt={r.name}
+                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    {r.open && (
+                      <span className="absolute top-2 left-2 rounded bg-emerald-500 shadow-sm px-1.5 py-0.5 text-[9px] font-bold text-white uppercase tracking-wider">
+                        Open Now
                       </span>
                     )}
-                  </p>
-                </div>
-              </Link>
-            ))}
+                    {distances[r.id] != null && (
+                      <span className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
+                        style={{ background: 'linear-gradient(135deg, #8b5cf6, #6366f1)' }}>
+                        <Navigation className="h-2.5 w-2.5" />
+                        {formatDist(distances[r.id])}
+                      </span>
+                    )}
+                  </div>
+                  <div className="p-3 flex-1 flex flex-col">
+                    <h3 className="text-xs font-bold truncate text-gray-900 dark:text-white group-hover:text-brand-500 transition-colors">{r.name}</h3>
+                    <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 flex items-center gap-1 truncate">
+                      <MapPin className="h-2.5 w-2.5 shrink-0" /> {r.city || 'Local Area'}
+                      {distances[r.id] != null && (
+                        <span className="ml-auto text-[9px] font-medium" style={{ color: '#8b5cf6' }}>
+                          {formatDist(distances[r.id])} away
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                </Link>
+              ))}
           </div>
         </section>
       )}
@@ -373,12 +371,12 @@ function FoodCard({ item, onAdd }) {
       style={{ borderColor: 'var(--border-color)' }}>
       {/* Image */}
       <div className="h-36 w-full overflow-hidden relative bg-gray-100 dark:bg-gray-800">
-        <img 
-          src={img} 
-          alt={item.name} 
-          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" 
+        <img
+          src={img}
+          alt={item.name}
+          className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"/>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
         <div className="absolute bottom-2 left-2 rounded-md bg-white/95 dark:bg-gray-900/95 text-gray-900 dark:text-white text-xs font-bold px-2 py-1 shadow-sm backdrop-blur-sm border border-gray-100 dark:border-gray-800">
           ₹{item.price?.toFixed(0)}
         </div>
@@ -394,7 +392,7 @@ function FoodCard({ item, onAdd }) {
             {item.description || 'A delicious and freshly prepared meal full of authentic flavors.'}
           </p>
         </div>
-        
+
         <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between">
           <Link to={`/restaurants/${item.restaurant?.id}`}
             className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 hover:text-brand-500 dark:hover:text-brand-400 transition-colors truncate max-w-[120px]">
