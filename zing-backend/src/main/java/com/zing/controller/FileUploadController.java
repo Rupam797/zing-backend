@@ -39,17 +39,11 @@ public class FileUploadController {
         }
 
         try {
-            Map uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
             String url = uploadResult.get("secure_url").toString();
             return ResponseEntity.ok(Map.of("url", url));
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file in Cloudinary", e);
         }
-    }
-
-    private String getExtension(String filename) {
-        if (filename == null) return ".jpg";
-        int dot = filename.lastIndexOf('.');
-        return dot >= 0 ? filename.substring(dot) : ".jpg";
     }
 }

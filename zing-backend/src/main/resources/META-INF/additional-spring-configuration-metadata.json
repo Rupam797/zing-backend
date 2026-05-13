@@ -1,0 +1,29 @@
+{
+  "properties": [
+    {
+      "name": "jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT Secret Key."
+    },
+    {
+      "name": "jwt.expiration",
+      "type": "java.lang.Long",
+      "description": "JWT Expiration time in milliseconds."
+    },
+    {
+      "name": "spring.websocket.path",
+      "type": "java.lang.String",
+      "description": "WebSocket endpoint path."
+    },
+    {
+      "name": "app.cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "Allowed CORS origins."
+    },
+    {
+      "name": "cloudinary.url",
+      "type": "java.lang.String",
+      "description": "Cloudinary URL."
+    }
+  ]
+}
