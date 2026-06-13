@@ -63,12 +63,30 @@ export default function App() {
               position="top-right"
               toastOptions={{
                 style: {
-                  fontSize: '12px',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  fontFamily: 'Inter, system-ui, sans-serif',
+                  fontSize: '13px',
+                  padding: '14px 20px',
+                  borderRadius: '16px',
+                  fontFamily: 'Archivo Narrow, sans-serif',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  fontWeight: '600',
+                  backgroundColor: '#1c1c12',
+                  color: '#fdfae9',
+                  border: '3px solid #e6e3d2',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
                 },
-                success: { iconTheme: { primary: '#f97316', secondary: '#fff' } },
+                success: {
+                  iconTheme: {
+                    primary: '#c41e3a',
+                    secondary: '#fdfae9',
+                  },
+                },
+                error: {
+                  iconTheme: {
+                    primary: '#c41e3a',
+                    secondary: '#fdfae9',
+                  },
+                },
               }}
             />
           </CartProvider>

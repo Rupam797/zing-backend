@@ -4,7 +4,6 @@ import api from '../api/axios';
 import useGeolocation from '../hooks/useGeolocation';
 import RestaurantCard from '../components/RestaurantCard';
 
-/* Haversine distance (km) — client-side fallback */
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -62,85 +61,95 @@ export default function RestaurantsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pt-20 pb-12">
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div>
-          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>Restaurants</h1>
-          <p className="mt-1 text-xs" style={{ color: 'var(--text-muted)' }}>
-            {geo.lat ? (
-              <span className="flex items-center gap-1">
-                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Showing restaurants near you
-              </span>
-            ) : (
-              'Browse and order from local restaurants'
-            )}
-          </p>
+    <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 px-4 md:px-16">
+      <div className="max-w-6xl mx-auto">
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#e6e3d2] pb-8 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="material-symbols-outlined text-brand-500 text-3xl md:text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>restaurant</span>
+              <h1 className="font-headline-lg text-3xl md:text-4xl uppercase">Restaurants</h1>
+            </div>
+            <p className="text-[#5b4040] font-body-lg text-sm uppercase tracking-wide">
+              {geo.lat ? (
+                <span className="flex items-center gap-2">
+                  <span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Showing restaurants near your coordinates
+                </span>
+              ) : (
+                'Browse and order from premium local spots'
+              )}
+            </p>
+          </div>
+
+          {/* Sort toggle */}
+          <div className="flex items-center gap-1.5 rounded-full border-2 border-[#e6e3d2] p-1 bg-white">
+            <button
+              onClick={() => setSortBy('distance')}
+              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-label-caps uppercase tracking-wider transition-all ${
+                sortBy === 'distance' ? 'bg-brand-500 text-white shadow-md' : 'text-[#5b4040] hover:text-brand-500'
+              }`}
+            >
+              <Navigation className="h-3.5 w-3.5" /> Nearby
+            </button>
+            <button
+              onClick={() => setSortBy('name')}
+              className={`flex items-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-label-caps uppercase tracking-wider transition-all ${
+                sortBy === 'name' ? 'bg-brand-500 text-white shadow-md' : 'text-[#5b4040] hover:text-brand-500'
+              }`}
+            >
+              A-Z
+            </button>
+          </div>
         </div>
 
-        {/* Sort toggle */}
-        <div className="flex items-center gap-1 rounded-lg p-0.5" style={{ backgroundColor: 'var(--bg-input)' }}>
-          <button
-            onClick={() => setSortBy('distance')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-              sortBy === 'distance' ? 'bg-brand-500 text-white shadow-sm' : ''
-            }`}
-            style={sortBy !== 'distance' ? { color: 'var(--text-muted)' } : {}}
-          >
-            <Navigation className="h-3 w-3" /> Nearby
-          </button>
-          <button
-            onClick={() => setSortBy('name')}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
-              sortBy === 'name' ? 'bg-brand-500 text-white shadow-sm' : ''
-            }`}
-            style={sortBy !== 'name' ? { color: 'var(--text-muted)' } : {}}
-          >
-            A-Z
-          </button>
+        {/* Search */}
+        <div className="relative max-w-2xl mb-8 group">
+          <div className="absolute inset-y-0 left-6 flex items-center pointer-events-none text-[#1c1c12]/40">
+            <Search className="h-5 w-5" />
+          </div>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name, city, or address…"
+            className="w-full h-16 pl-14 pr-6 rounded-full border-4 border-[#e6e3d2] focus:border-brand-500 bg-white text-sm outline-none transition-all"
+          />
         </div>
+
+        {/* GPS status */}
+        {geo.loading && (
+          <div className="mb-6 flex items-center gap-2 text-xs font-label-caps tracking-wider uppercase text-[#5b4040] bg-[#f1eedd] p-3.5 rounded-2xl border-2 border-[#e6e3d2]">
+            <Loader2 className="h-4 w-4 animate-spin text-brand-500" />
+            Getting your location for nearby sorting…
+          </div>
+        )}
+        {geo.error && (
+          <div className="mb-6 flex items-center gap-2 text-xs font-label-caps tracking-wider uppercase text-amber-600 bg-amber-50 p-3.5 rounded-2xl border-2 border-amber-200">
+            <MapPin className="h-4 w-4 text-amber-500" />
+            {geo.error.includes('denied') ? 'Enable location to see nearby restaurants' : 'Location unavailable — showing all'}
+          </div>
+        )}
+
+        {/* Results */}
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-8">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="animate-pulse bg-[#f1eedd] h-80 rounded-[40px]" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20 bg-[#f7f4e3] rounded-[32px] border-4 border-dashed border-[#e6e3d2] max-w-xl mx-auto px-6">
+            <span className="material-symbols-outlined text-brand-500 text-5xl mb-4">search_off</span>
+            <h3 className="font-headline-md text-xl uppercase mb-2">No restaurants found</h3>
+            <p className="font-body-md text-[#5b4040] text-sm uppercase">Try typing a different name or checking your connection.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 mt-8">
+            {filtered.map((r) => (
+              <RestaurantCard key={r.id} restaurant={r} distanceKm={distances[r.id] ?? null} />
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Search */}
-      <div className="mt-4 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-faint)' }} />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, city, or address…"
-          className="w-full rounded-xl border py-2.5 pl-10 pr-3 text-xs outline-none focus:border-brand-500 transition-colors"
-          style={{ backgroundColor: 'var(--bg-input)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
-        />
-      </div>
-
-      {/* GPS status */}
-      {geo.loading && (
-        <div className="mt-3 flex items-center gap-2 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-          <Loader2 className="h-3 w-3 animate-spin" />
-          Getting your location for nearby sorting…
-        </div>
-      )}
-      {geo.error && (
-        <div className="mt-3 flex items-center gap-2 text-[11px] text-amber-500">
-          <MapPin className="h-3 w-3" />
-          {geo.error.includes('denied') ? 'Enable location to see nearby restaurants' : 'Location unavailable — showing all'}
-        </div>
-      )}
-
-      {/* Results */}
-      {loading ? (
-        <div className="mt-12 text-center">
-          <div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-        </div>
-      ) : filtered.length === 0 ? (
-        <div className="mt-12 text-center text-xs" style={{ color: 'var(--text-muted)' }}>No restaurants found</div>
-      ) : (
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((r) => (
-            <RestaurantCard key={r.id} restaurant={r} distanceKm={distances[r.id] ?? null} />
-          ))}
-        </div>
-      )}
     </div>
   );
 }

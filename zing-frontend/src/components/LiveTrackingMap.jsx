@@ -57,7 +57,7 @@ let L = null;
 /* ──────────────────────────────────────────────────────────────
    Marker HTML builders (inlined in divIcon for max performance)
    ────────────────────────────────────────────────────────────── */
-function createMarkerIcon(emoji, color, glowColor, pulsing = false) {
+function createMarkerIcon(svgContent, color, glowColor, pulsing = false) {
   const pulseRing = pulsing
     ? `<div style="
         position:absolute; inset:-8px; border-radius:50%;
@@ -83,7 +83,7 @@ function createMarkerIcon(emoji, color, glowColor, pulsing = false) {
           border:2.5px solid white;
           z-index:2;
         ">
-          <span style="transform:rotate(45deg); font-size:18px; line-height:1;">${emoji}</span>
+          <span style="transform:rotate(45deg); display:flex; align-items:center; justify-content:center; width:20px; height:20px;">${svgContent}</span>
         </div>
       </div>`,
     iconSize: [42, 42],
@@ -92,9 +92,22 @@ function createMarkerIcon(emoji, color, glowColor, pulsing = false) {
   };
 }
 
-const RIDER_ICON_CONF = createMarkerIcon('🛵', '#8b5cf6', 'rgba(139,92,246,0.55)', true);
-const RESTAURANT_ICON_CONF = createMarkerIcon('🍽️', '#ef4444', 'rgba(239,68,68,0.45)');
-const CUSTOMER_ICON_CONF = createMarkerIcon('📍', '#22c55e', 'rgba(34,197,94,0.45)');
+const RIDER_ICON_CONF = createMarkerIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>`,
+  '#8b5cf6',
+  'rgba(139,92,246,0.55)',
+  true
+);
+const RESTAURANT_ICON_CONF = createMarkerIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"></path><path d="M7 2v20"></path><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"></path></svg>`,
+  '#ef4444',
+  'rgba(239,68,68,0.45)'
+);
+const CUSTOMER_ICON_CONF = createMarkerIcon(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+  '#22c55e',
+  'rgba(34,197,94,0.45)'
+);
 
 /* ──────────────────────────────────────────────────────────────
    Main Component
@@ -211,7 +224,7 @@ export default function LiveTrackingMap({
           .addTo(map)
           .bindPopup(`
             <div style="font-family:Inter,system-ui,sans-serif;min-width:140px;">
-              <p style="font-weight:700;margin:0 0 3px;color:#ef4444;">🍽️ Pickup Point</p>
+              <p style="font-weight:700;margin:0 0 3px;color:#ef4444;">Pickup Point</p>
               <p style="margin:0;font-size:12px;">${restaurantName}</p>
               <p style="margin:2px 0 0;font-size:10px;color:#6b7280;">${restaurantAddress || ''}</p>
             </div>
@@ -225,7 +238,7 @@ export default function LiveTrackingMap({
           .addTo(map)
           .bindPopup(`
             <div style="font-family:Inter,system-ui,sans-serif;min-width:140px;">
-              <p style="font-weight:700;margin:0 0 3px;color:#22c55e;">📍 Drop-off</p>
+              <p style="font-weight:700;margin:0 0 3px;color:#22c55e;">Drop-off</p>
               <p style="margin:0;font-size:12px;">${customerName}</p>
               <p style="margin:2px 0 0;font-size:10px;color:#6b7280;">Order #${orderId || ''}</p>
             </div>
@@ -239,7 +252,7 @@ export default function LiveTrackingMap({
           .addTo(map)
           .bindPopup(`
             <div style="font-family:Inter,system-ui,sans-serif;min-width:140px;">
-              <p style="font-weight:700;margin:0 0 3px;color:#8b5cf6;">🛵 Delivery Partner</p>
+              <p style="font-weight:700;margin:0 0 3px;color:#8b5cf6;">Delivery Partner</p>
               <p style="margin:0;font-size:12px;">${mode === 'delivery' ? 'You' : 'On the way'}</p>
             </div>
           `);
@@ -280,7 +293,7 @@ export default function LiveTrackingMap({
         .addTo(mapInstance.current)
         .bindPopup(`
           <div style="font-family:Inter,system-ui,sans-serif;">
-            <p style="font-weight:700;margin:0;color:#8b5cf6;">🛵 Delivery Partner</p>
+            <p style="font-weight:700;margin:0;color:#8b5cf6;">Delivery Partner</p>
           </div>
         `);
     }
@@ -310,7 +323,7 @@ export default function LiveTrackingMap({
         .addTo(mapInstance.current)
         .bindPopup(`
           <div style="font-family:Inter,system-ui,sans-serif;">
-            <p style="font-weight:700;margin:0;color:#22c55e;">📍 Drop-off</p>
+            <p style="font-weight:700;margin:0;color:#22c55e;">Drop-off</p>
             <p style="margin:0;font-size:12px;">${customerName}</p>
           </div>
         `);

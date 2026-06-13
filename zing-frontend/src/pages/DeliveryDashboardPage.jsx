@@ -14,10 +14,10 @@ import 'leaflet/dist/leaflet.css';
 const LiveTrackingMap = lazy(() => import('../components/LiveTrackingMap'));
 
 const STATUS_CLS = {
-  ACCEPTED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-  PREPARING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  OUT_FOR_DELIVERY: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-  DELIVERED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+  ACCEPTED: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200',
+  PREPARING: 'bg-amber-100 text-amber-800 border-2 border-amber-200',
+  OUT_FOR_DELIVERY: 'bg-purple-100 text-purple-800 border-2 border-purple-200',
+  DELIVERED: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200',
 };
 
 /* Geocode cache */
@@ -86,7 +86,6 @@ export default function DeliveryDashboardPage() {
         geocodeAddress(addr).then((c) => {
           if (c) setRestaurantCoords((prev) => ({ ...prev, [o.id]: c }));
         });
-        // Approximate customer location (offset from restaurant if no real coords)
         if (o.customerLat && o.customerLng) {
           setCustomerCoords((prev) => ({ ...prev, [o.id]: { lat: o.customerLat, lng: o.customerLng } }));
         }
@@ -173,210 +172,215 @@ export default function DeliveryDashboardPage() {
     { key: 'history',   label: 'History',    icon: Clock,   count: history.length },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 flex items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+    </div>
+  );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 pt-20 pb-12">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
-        <div>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Delivery Dashboard</h1>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Welcome, {user?.name}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          {/* GPS status */}
-          {hasActive && (
-            <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium"
-              style={{ backgroundColor: 'var(--bg-input)', color: myPos ? '#22c55e' : '#ef4444' }}>
-              <MapPin className="h-3 w-3" />
-              {myPos ? 'GPS Active' : geo.error ? 'GPS Error' : 'GPS Loading…'}
+    <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 px-4 md:px-16 page-enter">
+      <div className="max-w-4xl mx-auto">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4 border-b border-[#e6e3d2] pb-6 mb-8">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="material-symbols-outlined text-brand-500 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>sports_motorsports</span>
+              <h1 className="font-headline-lg text-3xl text-[#1c1c12] uppercase italic">Delivery Dashboard</h1>
             </div>
-          )}
-          {hasActive && (
-            <div className="flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium"
-              style={{ backgroundColor: 'var(--bg-input)', color: connectionStatus === 'connected' ? '#22c55e' : '#f59e0b' }}>
-              {connectionStatus === 'connected' ? <Wifi className="h-3 w-3" /> : <WifiOff className="h-3 w-3" />}
-              {connectionStatus === 'connected' ? 'Broadcasting' : 'Connecting…'}
-            </div>
-          )}
-          <button onClick={loadAll}
-            className="flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
-            style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}>
-            <RefreshCw className="h-3 w-3" /> Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Stats */}
-      {stats && (
-        <div className="grid gap-3 sm:grid-cols-4 mb-6">
-          <Stat icon={<Package className="h-4 w-4" />} label="Available" value={stats.availableOrders} />
-          <Stat icon={<Truck className="h-4 w-4" />}   label="Active"    value={stats.activeDeliveries} />
-          <Stat icon={<Check className="h-4 w-4" />}   label="Delivered" value={stats.totalDelivered} />
-          <Stat icon={<DollarSign className="h-4 w-4" />} label="Earnings" value={`₹${stats.totalEarnings?.toFixed(0) || 0}`} accent />
-        </div>
-      )}
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-5 rounded-xl p-1 w-full sm:w-fit overflow-x-auto" style={{ backgroundColor: 'var(--bg-input)' }}>
-        {tabs.map((t) => {
-          const Icon = t.icon;
-          const isActive = tab === t.key;
-          return (
-            <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-1.5 text-[11px] px-3 py-1.5 rounded-lg font-medium transition-all whitespace-nowrap ${
-                isActive ? 'bg-brand-500 text-white shadow-sm' : 'hover:bg-black/5 dark:hover:bg-white/5'
-              }`} style={!isActive ? { color: 'var(--text-muted)' } : {}}>
-              <Icon className="h-3 w-3" />
-              {t.label}
-              <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-bold ${isActive ? 'bg-white/20' : 'bg-black/10 dark:bg-white/10'}`}>
-                {t.count}
-              </span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Available Orders */}
-      {tab === 'available' && (
-        <div>
-          {available.length === 0 ? (
-            <Empty text="No orders available for delivery right now" />
-          ) : (
-            <div className="space-y-3">
-              {available.map((o) => (
-                <OrderCard key={o.id} order={o}>
-                  <div className="text-right flex flex-col items-end gap-2">
-                    <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>Earn ₹{deliveryFee(o.totalAmount)}</p>
-                    <button onClick={() => handlePickup(o.id)}
-                      className="flex items-center gap-1 rounded-lg bg-brand-500 px-3 py-1.5 text-[11px] font-semibold text-white hover:bg-brand-600 transition-colors shadow-sm">
-                      <Truck className="h-3 w-3" /> Pick Up
-                    </button>
-                  </div>
-                </OrderCard>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Active Deliveries with Live Map */}
-      {tab === 'active' && (
-        <div>
-          {active.length === 0 ? (
-            <Empty text="You have no active deliveries" />
-          ) : (
-            <div className="space-y-3">
-              {active.map((o) => (
-                <div key={o.id} className="rounded-xl border overflow-hidden transition-all" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                  <div className="p-3">
-                    <div className="flex items-start justify-between gap-3">
-                      <OrderInfo order={o} />
-                      <div className="text-right flex flex-col items-end gap-2">
-                        <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>Earnings: ₹{deliveryFee(o.totalAmount)}</p>
-                        <div className="flex items-center gap-2">
-                          <button onClick={() => toggleMap(o.id)}
-                            className={`flex items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition-all ${
-                              expandedMapId === o.id ? 'bg-indigo-50 border-indigo-300 text-indigo-600 dark:bg-indigo-900/20 dark:border-indigo-700 dark:text-indigo-400' : ''
-                            }`} style={expandedMapId !== o.id ? { borderColor: 'var(--border-color)', color: 'var(--text-secondary)' } : {}}>
-                            <Navigation className="h-3 w-3" />
-                            {expandedMapId === o.id ? 'Hide Map' : 'Live Map'}
-                            {expandedMapId === o.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                          </button>
-                          <button onClick={() => handleDeliver(o.id)}
-                            className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 transition-colors">
-                            <Check className="h-3 w-3" /> Delivered
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Live tracking map */}
-                  {expandedMapId === o.id && (
-                    <div className="border-t" style={{ borderColor: 'var(--border-color)' }}>
-                      <div className="flex items-center justify-between px-4 py-2 text-[11px]"
-                        style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}>
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
-                            {o.restaurant?.name || 'Restaurant'}
-                          </span>
-                          <span style={{ color: 'var(--text-faint)' }}>→</span>
-                          <span className="flex items-center gap-1">
-                            <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
-                            {o.user?.name || 'Customer'}
-                          </span>
-                        </div>
-                        <button onClick={() => openGoogleMaps(o)}
-                          className="flex items-center gap-1 text-brand-500 hover:underline">
-                          <ExternalLink className="h-3 w-3" /> Google Maps
-                        </button>
-                      </div>
-
-                      <Suspense fallback={
-                        <div className="h-80 flex items-center justify-center" style={{ backgroundColor: 'var(--bg-card)' }}>
-                          <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-                        </div>
-                      }>
-                        <LiveTrackingMap
-                          deliveryPos={myPos}
-                          customerPos={customerCoords[o.id] || null}
-                          restaurantPos={restaurantCoords[o.id] || null}
-                          restaurantName={o.restaurant?.name}
-                          restaurantAddress={o.restaurant?.address}
-                          restaurantCity={o.restaurant?.city}
-                          customerName={o.user?.name}
-                          orderId={o.id}
-                          connectionStatus={connectionStatus}
-                          speed={geo.speed}
-                          mode="delivery"
-                          height={350}
-                        />
-                      </Suspense>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* History */}
-      {tab === 'history' && (
-        <div>
-          {history.length === 0 ? (
-            <Empty text="No deliveries completed yet — pick up an order to get started!" />
-          ) : (
-            <div className="space-y-2">
-              {history.map((o) => (
-                <OrderCard key={o.id} order={o} showDeliveredAt>
-                  <div className="text-right">
-                    <p className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">+₹{deliveryFee(o.totalAmount)}</p>
-                    <p className="text-[10px]" style={{ color: 'var(--text-faint)' }}>earned</p>
-                  </div>
-                </OrderCard>
-              ))}
-              <div className="mt-4 rounded-xl border p-3 flex items-center justify-between"
-                style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-                <span className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  Total from {history.length} {history.length === 1 ? 'delivery' : 'deliveries'}
-                </span>
-                <span className="text-sm font-bold text-brand-500">
-                  ₹{history.reduce((sum, o) => sum + Math.max(30, o.totalAmount * 0.10), 0).toFixed(0)}
-                </span>
+            <p className="text-sm font-body-lg text-[#5b4040] uppercase tracking-wide">Welcome, {user?.name || 'Partner'}</p>
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            {hasActive && (
+              <div className="flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-[10px] font-label-caps uppercase tracking-wider bg-white"
+                style={{ borderColor: myPos ? '#22c55e' : '#ef4444', color: myPos ? '#16a34a' : '#ef4444' }}>
+                <MapPin className="h-3.5 w-3.5" />
+                {myPos ? 'GPS Active' : geo.error ? 'GPS Error' : 'GPS Loading…'}
               </div>
-            </div>
-          )}
+            )}
+            {hasActive && (
+              <div className="flex items-center gap-1.5 rounded-full border-2 px-4 py-1.5 text-[10px] font-label-caps uppercase tracking-wider bg-white"
+                style={{ borderColor: connectionStatus === 'connected' ? '#22c55e' : '#f59e0b', color: connectionStatus === 'connected' ? '#16a34a' : '#d97706' }}>
+                {connectionStatus === 'connected' ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
+                {connectionStatus === 'connected' ? 'Broadcasting' : 'Connecting…'}
+              </div>
+            )}
+            <button onClick={loadAll}
+              className="flex items-center gap-2 rounded-full border-4 border-[#e6e3d2] px-6 py-2.5 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12] bg-white shadow-md hover:bg-[#f7f4e3] transition-colors">
+              <RefreshCw className="h-3.5 w-3.5" /> Refresh
+            </button>
+          </div>
         </div>
-      )}
+
+        {/* Stats */}
+        {stats && (
+          <div className="grid gap-6 grid-cols-1 sm:grid-cols-4 mb-8">
+            <Stat icon={<Package className="h-5 w-5" />} label="Available Orders" value={stats.availableOrders} />
+            <Stat icon={<Truck className="h-5 w-5" />}   label="Active Runs"    value={stats.activeDeliveries} />
+            <Stat icon={<Check className="h-5 w-5" />}   label="Delivered Count" value={stats.totalDelivered} />
+            <Stat icon={<DollarSign className="h-5 w-5" />} label="Payout Earnings" value={`₹${stats.totalEarnings?.toFixed(0) || 0}`} accent />
+          </div>
+        )}
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-8 rounded-full border-4 border-[#e6e3d2] p-1.5 w-full sm:w-fit bg-white shadow-md overflow-x-auto">
+          {tabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = tab === t.key;
+            return (
+              <button 
+                key={t.key} 
+                onClick={() => setTab(t.key)}
+                className={`flex items-center gap-2 text-xs font-label-caps uppercase tracking-wider px-5 py-2.5 rounded-full transition-all whitespace-nowrap ${
+                  isActive ? 'bg-brand-500 text-white shadow-md' : 'text-[#5b4040] hover:text-brand-500'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t.label}
+                <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-[#e6e3d2] text-[#1c1c12]'}`}>
+                  {t.count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Available Orders */}
+        {tab === 'available' && (
+          <div>
+            {available.length === 0 ? (
+              <Empty text="No orders available for delivery right now" />
+            ) : (
+              <div className="space-y-4">
+                {available.map((o) => (
+                  <OrderCard key={o.id} order={o}>
+                    <div className="text-right flex flex-col items-end gap-2 shrink-0">
+                      <p className="text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040]">Payout: ₹{deliveryFee(o.totalAmount)}</p>
+                      <button onClick={() => handlePickup(o.id)}
+                        className="flex items-center gap-1.5 rounded-full bg-brand-500 text-white px-5 py-2.5 text-xs font-label-caps uppercase tracking-wider hover:brightness-110 shadow-md transition-transform hover:scale-105">
+                        <Truck className="h-3.5 w-3.5" /> Pick Up
+                      </button>
+                    </div>
+                  </OrderCard>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Active Deliveries */}
+        {tab === 'active' && (
+          <div>
+            {active.length === 0 ? (
+              <Empty text="You have no active deliveries" />
+            ) : (
+              <div className="space-y-4">
+                {active.map((o) => (
+                  <div key={o.id} className="rounded-[32px] border-4 border-[#e6e3d2] overflow-hidden bg-white shadow-xl">
+                    <div className="p-6">
+                      <div className="flex items-start justify-between flex-wrap gap-4">
+                        <OrderInfo order={o} />
+                        <div className="text-right flex flex-col items-end gap-2.5 w-full sm:w-auto mt-4 sm:mt-0">
+                          <p className="text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040]">Payout: ₹{deliveryFee(o.totalAmount)}</p>
+                          <div className="flex items-center gap-2 flex-wrap justify-end w-full">
+                            <button onClick={() => toggleMap(o.id)}
+                              className={`flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-full border-4 px-4 py-2 text-xs font-label-caps uppercase tracking-wider transition-all ${
+                                expandedMapId === o.id ? 'bg-[#f7f4e3] border-brand-500 text-brand-500' : 'bg-white border-[#e6e3d2] text-[#1c1c12] hover:bg-[#f7f4e3]'
+                              }`}
+                            >
+                              <Navigation className="h-3.5 w-3.5" />
+                              {expandedMapId === o.id ? 'Hide Map' : 'Live Map'}
+                              {expandedMapId === o.id ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                            </button>
+                            <button onClick={() => handleDeliver(o.id)}
+                              className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-label-caps uppercase tracking-wider bg-emerald-500 hover:brightness-110 text-white shadow-md transition-all">
+                              <Check className="h-3.5 w-3.5" /> Delivered
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Live tracking map */}
+                    {expandedMapId === o.id && (
+                      <div className="border-t-4 border-[#e6e3d2] relative" style={{ height: '380px' }}>
+                        <div className="absolute top-4 left-4 right-4 z-40 flex items-center justify-between px-4 py-2.5 rounded-xl bg-black/85 backdrop-blur-md text-white text-[10px] font-label-caps uppercase tracking-wider border border-white/10">
+                          <div className="flex items-center gap-2">
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full bg-red-500 inline-block" />
+                              {o.restaurant?.name || 'Restaurant'}
+                            </span>
+                            <span className="text-white/40">→</span>
+                            <span className="flex items-center gap-1.5">
+                              <span className="h-2 w-2 rounded-full bg-emerald-500 inline-block" />
+                              {o.user?.name || 'Customer'}
+                            </span>
+                          </div>
+                          <button onClick={() => openGoogleMaps(o)}
+                            className="flex items-center gap-1 text-brand-500 hover:underline">
+                            <ExternalLink className="h-3 w-3" /> Navigate
+                          </button>
+                        </div>
+
+                        <Suspense fallback={
+                          <div className="h-full flex items-center justify-center bg-[#f1eedd]/50">
+                            <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+                          </div>
+                        }>
+                          <LiveTrackingMap
+                            deliveryPos={myPos}
+                            customerPos={customerCoords[o.id] || null}
+                            restaurantPos={restaurantCoords[o.id] || null}
+                            restaurantName={o.restaurant?.name}
+                            restaurantAddress={o.restaurant?.address}
+                            restaurantCity={o.restaurant?.city}
+                            customerName={o.user?.name}
+                            orderId={o.id}
+                            connectionStatus={connectionStatus}
+                            speed={geo.speed}
+                            mode="delivery"
+                            height={376}
+                          />
+                        </Suspense>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* History */}
+        {tab === 'history' && (
+          <div>
+            {history.length === 0 ? (
+              <Empty text="No deliveries completed yet — pick up an order to get started!" />
+            ) : (
+              <div className="space-y-4">
+                {history.map((o) => (
+                  <OrderCard key={o.id} order={o} showDeliveredAt>
+                    <div className="text-right shrink-0">
+                      <p className="text-sm font-headline-md text-emerald-600">+₹{deliveryFee(o.totalAmount)}</p>
+                      <p className="text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040]">earned</p>
+                    </div>
+                  </OrderCard>
+                ))}
+                
+                <div className="rounded-[24px] border-4 border-[#e6e3d2] p-5 flex items-center justify-between bg-white shadow-md">
+                  <span className="text-xs font-label-caps uppercase tracking-wider text-[#5b4040]">
+                    Total Payout ({history.length} runs)
+                  </span>
+                  <span className="text-base font-headline-md text-brand-500">
+                    ₹{history.reduce((sum, o) => sum + Math.max(30, o.totalAmount * 0.10), 0).toFixed(0)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -386,20 +390,20 @@ export default function DeliveryDashboardPage() {
 function OrderInfo({ order: o, showDeliveredAt }) {
   return (
     <div className="min-w-0 flex-1">
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>#{o.id}</span>
-        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${STATUS_CLS[o.status] || ''}`}>
+      <div className="flex items-center gap-2 flex-wrap mb-2">
+        <span className="font-headline-md text-base text-[#1c1c12]">Order #{o.id}</span>
+        <span className={`text-[9px] font-label-caps uppercase tracking-wider px-2.5 py-1 rounded-md shadow-sm ${STATUS_CLS[o.status] || ''}`}>
           {o.status?.replace(/_/g, ' ')}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-3 mt-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{o.restaurant?.name || '—'}</span>
-        <span className="flex items-center gap-1"><User className="h-3 w-3" />{o.user?.name || 'Customer'}</span>
-        <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}</span>
+      <div className="flex flex-wrap items-center gap-4 text-xs font-label-caps uppercase tracking-wider text-[#5b4040]">
+        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm text-brand-500">store</span> {o.restaurant?.name || '—'}</span>
+        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm text-brand-500">person</span> {o.user?.name || 'Customer'}</span>
+        <span className="flex items-center gap-1"><span className="material-symbols-outlined text-sm text-brand-500">calendar_month</span> {o.createdAt ? new Date(o.createdAt).toLocaleDateString() : '—'}</span>
       </div>
-      <p className="text-xs font-semibold text-brand-500 mt-1">₹{o.totalAmount?.toFixed(2)}</p>
+      <p className="text-sm font-headline-md text-brand-500 mt-2">Value: ₹{o.totalAmount?.toFixed(0)}</p>
       {showDeliveredAt && o.deliveredAt && (
-        <p className="text-[10px] mt-0.5" style={{ color: 'var(--text-faint)' }}>Delivered: {new Date(o.deliveredAt).toLocaleString()}</p>
+        <p className="text-[9px] font-label-caps uppercase tracking-wider text-white/40 mt-1">Delivered: {new Date(o.deliveredAt).toLocaleString()}</p>
       )}
     </div>
   );
@@ -407,8 +411,8 @@ function OrderInfo({ order: o, showDeliveredAt }) {
 
 function OrderCard({ order: o, children, showDeliveredAt }) {
   return (
-    <div className="rounded-xl border p-3" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-      <div className="flex items-start justify-between gap-3">
+    <div className="rounded-[32px] border-4 border-[#e6e3d2] hover:border-brand-500 p-6 bg-white shadow-md transition-all duration-300">
+      <div className="flex items-start justify-between flex-wrap gap-4">
         <OrderInfo order={o} showDeliveredAt={showDeliveredAt} />
         {children}
       </div>
@@ -418,11 +422,11 @@ function OrderCard({ order: o, children, showDeliveredAt }) {
 
 function Stat({ icon, label, value, accent }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border p-3" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
-      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-100 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400">{icon}</div>
+    <div className="flex items-center gap-4 rounded-[28px] border-4 border-[#e6e3d2] p-5 bg-white shadow-md">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-500 border-2 border-brand-500/20">{icon}</div>
       <div>
-        <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>{label}</p>
-        <p className={`text-sm font-bold ${accent ? 'text-brand-500' : ''}`} style={!accent ? { color: 'var(--text-primary)' } : {}}>{value}</p>
+        <p className="text-xs font-label-caps uppercase tracking-wider text-[#5b4040]">{label}</p>
+        <p className={`text-xl font-headline-md mt-0.5 ${accent ? 'text-brand-500' : 'text-[#1c1c12]'}`}>{value}</p>
       </div>
     </div>
   );
@@ -430,9 +434,9 @@ function Stat({ icon, label, value, accent }) {
 
 function Empty({ text, icon: Icon = Truck }) {
   return (
-    <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
-      <Icon className="h-9 w-9 mx-auto mb-3" style={{ color: 'var(--text-faint)' }} />
-      <p className="text-xs">{text}</p>
+    <div className="text-center py-20 bg-[#f7f4e3] rounded-[32px] border-4 border-dashed border-[#e6e3d2] max-w-xl mx-auto px-6">
+      <Icon className="h-10 w-10 mx-auto mb-4 text-[#5b4040]" />
+      <p className="text-xs font-label-caps uppercase tracking-wider text-[#5b4040]">{text}</p>
     </div>
   );
 }

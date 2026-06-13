@@ -1,14 +1,10 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Navigation } from 'lucide-react';
 import { imageUrl } from '../api/upload';
 
-/**
- * @param {Object} props
- * @param {Object} props.restaurant
- * @param {number|null} props.distanceKm - Distance from user in km (null = unknown)
- */
+const PLACEHOLDER_RESTAURANT = "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=600&q=80";
+
 export default function RestaurantCard({ restaurant, distanceKm = null }) {
-  const img = imageUrl(restaurant.imageUrl);
+  const img = imageUrl(restaurant.imageUrl) || PLACEHOLDER_RESTAURANT;
 
   const formatDist = (d) => {
     if (d === null || d === undefined) return null;
@@ -19,58 +15,42 @@ export default function RestaurantCard({ restaurant, distanceKm = null }) {
   const distLabel = formatDist(distanceKm);
 
   return (
-    <Link
+    <Link 
       to={`/restaurants/${restaurant.id}`}
-      className="block rounded-xl border transition-all duration-200 hover:border-brand-400 hover:-translate-y-0.5 hover:shadow-lg overflow-hidden group"
-      style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
+      className="group relative bg-white rounded-[40px] overflow-hidden border-4 border-[#e6e3d2] shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 flex flex-col"
     >
-      <div className="h-32 flex items-center justify-center overflow-hidden relative" style={{ backgroundColor: 'var(--bg-input)' }}>
-        {img ? (
-          <img src={img} alt={restaurant.name} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
-        ) : (
-          <span className="text-3xl">🍽️</span>
-        )}
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-
-        {/* Open/Closed badge */}
-        <span className={`absolute top-2 left-2 text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm ${
-          restaurant.open
-            ? 'bg-emerald-500 text-white'
-            : 'bg-red-500/90 text-white'
-        }`}>
-          {restaurant.open ? 'Open' : 'Closed'}
-        </span>
-
-        {/* Distance badge */}
+      <div className="relative h-64 overflow-hidden bg-[#f1eedd]">
+        <img 
+          className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+          src={img} 
+          alt={restaurant.name}
+        />
+        <div className="absolute top-6 left-6 flex gap-3 z-20">
+          {restaurant.open ? (
+            <span className="bg-brand-500 text-white font-label-caps text-[10px] tracking-wider px-5 py-2 rounded-lg uppercase shadow-lg">Open Now</span>
+          ) : (
+            <span className="bg-[#5b4040] text-white font-label-caps text-[10px] tracking-wider px-5 py-2 rounded-lg uppercase shadow-lg">Closed</span>
+          )}
+        </div>
         {distLabel && (
-          <div
-            className="absolute top-2 right-2 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm"
-            style={{
-              background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-              color: 'white',
-              boxShadow: '0 2px 8px rgba(139,92,246,0.35)',
-            }}
-          >
-            <Navigation className="h-2.5 w-2.5" />
+          <div className="absolute top-6 right-6 z-20 bg-black/60 backdrop-blur-md text-white font-label-caps text-[10px] tracking-wider px-4 py-2 rounded-full border border-white/10 flex items-center gap-1">
+            <span className="material-symbols-outlined text-xs">navigation</span>
             {distLabel}
           </div>
         )}
-      </div>
-      <div className="p-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold truncate group-hover:text-brand-500 transition-colors" style={{ color: 'var(--text-primary)' }}>
-            {restaurant.name}
-          </h3>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent opacity-70 group-hover:opacity-85 transition-opacity duration-500 z-10"></div>
+        <div className="absolute bottom-6 left-6 text-white z-20">
+          <div className="flex items-center gap-2 font-body-md text-xs uppercase text-white/80 tracking-wide">
+            <span className="material-symbols-outlined text-base">location_on</span>
+            {restaurant.city || 'Local Area'}
+          </div>
         </div>
-        <div className="mt-1 flex items-center gap-1 text-[11px]" style={{ color: 'var(--text-muted)' }}>
-          <MapPin className="h-3 w-3 shrink-0" />
-          <span className="truncate">{restaurant.address || restaurant.city || 'Local Area'}</span>
-          {distLabel && (
-            <span className="ml-auto shrink-0 text-[10px] font-medium" style={{ color: '#8b5cf6' }}>
-              {distLabel} away
-            </span>
-          )}
+      </div>
+      <div className="p-8 z-20 bg-white flex justify-between items-center flex-1">
+        <h3 className="font-headline-lg text-xl text-[#1c1c12] uppercase group-hover:text-brand-500 transition-colors line-clamp-1 pr-2">{restaurant.name}</h3>
+        <div className="flex items-center gap-2 bg-[#e6e3d2] px-4 py-1.5 rounded-xl shrink-0">
+          <span className="material-symbols-outlined text-brand-500 text-base" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
+          <span className="font-headline-md text-sm text-[#1c1c12]">4.6</span>
         </div>
       </div>
     </Link>

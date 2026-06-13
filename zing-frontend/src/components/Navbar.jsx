@@ -1,8 +1,8 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { ShoppingCart, LogOut, User, Utensils, Menu, X, Sun, Moon, MapPin } from 'lucide-react';
+import { ShoppingCart, LogOut, User, Menu, X, Sun, Moon, MapPin } from 'lucide-react';
 import { useState } from 'react';
 import useGeolocation from '../hooks/useGeolocation';
 import useReverseGeocode from '../hooks/useReverseGeocode';
@@ -12,6 +12,7 @@ export default function Navbar() {
   const { count } = useCart();
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
 
   // Auto-detect location
@@ -28,14 +29,15 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-bg-primary/90 backdrop-blur-md transition-all duration-300" style={{ borderColor: 'var(--border-color)' }}>
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2" onClick={() => setOpen(false)}>
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-brand-500">
-            <Utensils className="h-3.5 w-3.5 text-white" />
-          </div>
-          <span className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+         <Link to="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+          <svg className="h-6 w-6 shrink-0" viewBox="0 0 100 100">
+            <rect width="100" height="100" rx="26" fill="#c41e3a" />
+            <path d="M 32 26 H 68 L 44 48 H 68 L 32 74 L 40 48 H 28 Z" fill="white" />
+          </svg>
+          <span className="font-headline-md text-xl text-brand-500 uppercase tracking-tighter font-bold">
             Zing
           </span>
         </Link>
@@ -43,8 +45,7 @@ export default function Navbar() {
         {/* Location indicator */}
         {locationLabel && (
           <div
-            className="hidden sm:flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium max-w-[200px] cursor-default"
-            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}
+            className="hidden sm:flex items-center gap-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 px-3 py-1 text-[10px] font-label-caps tracking-wider uppercase max-w-[200px] cursor-default text-text-primary"
             title={reverseGeo.fullAddress || locationLabel}
           >
             <MapPin className="h-3 w-3 shrink-0 text-brand-500" />
@@ -54,7 +55,7 @@ export default function Navbar() {
         )}
 
         {/* Desktop Nav */}
-        <div className="hidden md:flex items-center gap-0.5">
+        <div className="hidden md:flex items-center gap-4">
           <NavLink to="/">Home</NavLink>
           <NavLink to="/restaurants">Restaurants</NavLink>
           {user && user.role === 'USER' && <NavLink to="/orders">Orders</NavLink>}
@@ -65,14 +66,14 @@ export default function Navbar() {
         </div>
 
         {/* Right side */}
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden md:flex items-center gap-4">
           <button
             onClick={toggle}
-            className="flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+            className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5"
             style={{ color: 'var(--text-muted)' }}
             title={dark ? 'Switch to light' : 'Switch to dark'}
           >
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {dark ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
           </button>
 
           {user ? (
@@ -80,54 +81,54 @@ export default function Navbar() {
               {user.role === 'USER' && (
                 <Link
                   to="/cart"
-                  className="relative flex h-8 w-8 items-center justify-center rounded-md transition-colors"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-black/5 dark:hover:bg-white/5"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-4.5 w-4.5" />
                   {count > 0 && (
-                    <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-brand-500 text-[9px] font-bold text-white">
+                    <span className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-brand-500 text-[9px] font-bold text-white">
                       {count}
                     </span>
                   )}
                 </Link>
               )}
-              <div className="flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-medium" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}>
+              <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-label-caps uppercase tracking-wider" style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-secondary)' }}>
                 <User className="h-3 w-3" />
                 {user.name}
               </div>
               <button
                 onClick={handleLogout}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
+                className="flex h-9 w-9 items-center justify-center rounded-full text-red-500 transition-colors hover:bg-red-50 dark:hover:bg-red-500/10"
               >
-                <LogOut className="h-4 w-4" />
+                <LogOut className="h-4.5 w-4.5" />
               </button>
             </>
           ) : (
             <>
-              <Link to="/login" className="rounded-md px-3 py-1.5 text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
+              <Link to="/login" className="font-label-caps text-xs tracking-wider uppercase text-on-surface-variant hover:text-brand-500 px-3 py-2 transition-colors">
                 Log in
               </Link>
-              <Link to="/signup" className="rounded-md bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600 transition-colors">
+              <Link to="/signup" className="bg-brand-500 text-white hover:brightness-115 px-6 py-2 rounded-full font-label-caps text-xs tracking-wider uppercase transition-all shadow-md">
                 Sign up
               </Link>
             </>
           )}
         </div>
 
-        {/* Mobile */}
+        {/* Mobile menu toggle */}
         <div className="flex md:hidden items-center gap-2">
-          <button onClick={toggle} className="flex h-8 w-8 items-center justify-center rounded-md" style={{ color: 'var(--text-muted)' }}>
-            {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <button onClick={toggle} className="flex h-9 w-9 items-center justify-center rounded-full" style={{ color: 'var(--text-muted)' }}>
+            {dark ? <Sun className="h-4.5 w-4.5" /> : <Moon className="h-4.5 w-4.5" />}
           </button>
-          <button onClick={() => setOpen(!open)} className="flex h-8 w-8 items-center justify-center rounded-md" style={{ color: 'var(--text-muted)' }}>
-            {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          <button onClick={() => setOpen(!open)} className="flex h-9 w-9 items-center justify-center rounded-full" style={{ color: 'var(--text-muted)' }}>
+            {open ? <X className="h-4.5 w-4.5" /> : <Menu className="h-4.5 w-4.5" />}
           </button>
         </div>
       </div>
 
       {/* Mobile menu */}
       {open && (
-        <div className="md:hidden border-t px-4 pb-3 pt-1" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
+        <div className="md:hidden border-t px-4 pb-4 pt-2 shadow-inner max-h-[calc(100vh-4rem)] overflow-y-auto" style={{ backgroundColor: 'var(--bg-primary)', borderColor: 'var(--border-color)' }}>
           <MobileLink to="/" onClick={() => setOpen(false)}>Home</MobileLink>
           <MobileLink to="/restaurants" onClick={() => setOpen(false)}>Restaurants</MobileLink>
           {user && user.role === 'USER' && (
@@ -141,12 +142,16 @@ export default function Navbar() {
           {user && user.role === 'ADMIN' && <MobileLink to="/admin" onClick={() => setOpen(false)}>Admin</MobileLink>}
           {user && user.role === 'DELIVERY' && <MobileLink to="/deliveries" onClick={() => setOpen(false)}>Deliveries</MobileLink>}
           {user ? (
-            <button onClick={handleLogout} className="w-full text-left rounded-md px-3 py-2 text-xs text-red-500">Log out</button>
+            <button onClick={handleLogout} className="w-full text-left rounded-md px-3 py-2 text-xs font-label-caps uppercase tracking-wider text-red-500">Log out</button>
           ) : (
-            <>
-              <MobileLink to="/login" onClick={() => setOpen(false)}>Log in</MobileLink>
-              <MobileLink to="/signup" onClick={() => setOpen(false)}>Sign up</MobileLink>
-            </>
+            <div className="flex flex-col gap-2 mt-2 pt-2 border-t border-dashed" style={{ borderColor: 'var(--border-color)' }}>
+              <Link to="/login" onClick={() => setOpen(false)} className="block text-center rounded-full border border-brand-500/30 py-2 text-xs font-label-caps uppercase tracking-wider text-on-surface-variant">
+                Log in
+              </Link>
+              <Link to="/signup" onClick={() => setOpen(false)} className="block text-center rounded-full bg-brand-500 py-2 text-xs font-label-caps uppercase tracking-wider text-white">
+                Sign up
+              </Link>
+            </div>
           )}
         </div>
       )}
@@ -155,16 +160,33 @@ export default function Navbar() {
 }
 
 function NavLink({ to, children }) {
+  const location = useLocation();
+  const isActive = location.pathname === to;
   return (
-    <Link to={to} className="rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors" style={{ color: 'var(--text-muted)' }}>
+    <Link
+      to={to}
+      className={`px-3 py-1.5 text-xs font-label-caps uppercase tracking-wider transition-colors ${
+        isActive
+          ? 'text-brand-500 border-b-2 border-brand-500 pb-1'
+          : 'text-on-surface-variant hover:text-brand-500'
+      }`}
+    >
       {children}
     </Link>
   );
 }
 
 function MobileLink({ to, onClick, children }) {
+  const location = useLocation();
+  const isActive = location.pathname === to;
   return (
-    <Link to={to} onClick={onClick} className="block rounded-md px-3 py-2 text-xs" style={{ color: 'var(--text-secondary)' }}>
+    <Link
+      to={to}
+      onClick={onClick}
+      className={`block rounded-md px-3 py-2 text-xs font-label-caps uppercase tracking-wider ${
+        isActive ? 'text-brand-500 bg-brand-50/50 dark:bg-brand-500/10' : 'text-text-secondary hover:text-brand-500'
+      }`}
+    >
       {children}
     </Link>
   );

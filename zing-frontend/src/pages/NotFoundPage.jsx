@@ -5,7 +5,7 @@ const EMOJIS = ['🍕', '🍔', '🍜', '🍱', '🥙', '🍛', '🧆', '🍩'];
 
 export default function NotFoundPage() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 text-center">
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 text-center bg-[#fdfae9] text-[#1c1c12] pt-16">
       {/* Floating food emojis */}
       {EMOJIS.map((e, i) => (
         <span
@@ -23,25 +23,24 @@ export default function NotFoundPage() {
       ))}
 
       {/* Content */}
-      <div className="relative z-10 page-enter">
-        <p className="text-8xl font-black gradient-text mb-2">404</p>
-        <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>
+      <div className="relative z-10 page-enter max-w-md w-full p-12 bg-white border-4 border-[#e6e3d2] rounded-[32px] shadow-xl">
+        <p className="text-8xl font-display-hero text-brand-500 uppercase tracking-tighter italic text-stroke-primary mb-4">404</p>
+        <h1 className="font-headline-lg text-2xl text-[#1c1c12] uppercase mb-2">
           Page not found
         </h1>
-        <p className="text-sm max-w-xs mx-auto mb-8" style={{ color: 'var(--text-muted)' }}>
+        <p className="text-sm font-body-lg text-[#5b4040] uppercase tracking-wide max-w-xs mx-auto mb-8">
           Looks like this page went out for delivery and never came back.
         </p>
-        <div className="flex items-center justify-center gap-3">
+        <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
             to="/"
-            className="flex items-center gap-2 rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-600 transition-colors btn-glow"
+            className="flex items-center gap-2 rounded-full bg-brand-500 px-6 py-3.5 text-xs font-label-caps uppercase tracking-wider text-white hover:brightness-110 transition-colors shadow-lg"
           >
             <Home className="h-4 w-4" /> Go Home
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-semibold transition-colors"
-            style={{ borderColor: 'var(--border-color)', color: 'var(--text-secondary)' }}
+            className="flex items-center gap-2 rounded-full border-4 border-[#e6e3d2] px-6 py-3 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12] bg-white hover:bg-[#f7f4e3] transition-colors shadow-md"
           >
             <ArrowLeft className="h-4 w-4" /> Go Back
           </button>

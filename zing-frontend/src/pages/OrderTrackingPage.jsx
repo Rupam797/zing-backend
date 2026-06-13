@@ -83,7 +83,7 @@ export default function OrderTrackingPage() {
             setDeliveryPos({ lat: locRes.data.lat, lng: locRes.data.lng });
           }
         } catch {
-          // No saved location yet, that's fine
+          // No saved location yet
         }
       }
     } catch {
@@ -125,275 +125,241 @@ export default function OrderTrackingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
+      <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen">
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Order not found</p>
-        <Link to="/orders" className="mt-2 text-xs text-brand-500">← Back to orders</Link>
+      <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 px-4 md:px-16 flex flex-col items-center justify-center">
+        <div className="max-w-md w-full p-12 text-center bg-white border-4 border-[#e6e3d2] rounded-[32px] shadow-xl">
+          <p className="text-sm font-label-caps uppercase tracking-wider text-[#5b4040]">Order not found</p>
+          <Link to="/orders" className="mt-4 inline-block rounded-full bg-brand-500 text-white px-8 py-3.5 font-label-caps text-xs tracking-wider uppercase hover:brightness-110 shadow-lg">← Back to orders</Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pt-20 pb-12">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-5">
-        <Link
-          to="/orders"
-          className="flex h-8 w-8 items-center justify-center rounded-md border"
-          style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div>
-          <h1 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
-            Order #{order.id}
-          </h1>
-          <p className="text-[11px]" style={{ color: 'var(--text-muted)' }}>
-            {order.restaurant?.name} • {order.createdAt?.split('T')[0]}
-          </p>
+    <div className="w-full min-h-screen bg-[#fdfae9] text-[#1c1c12] pt-24 pb-20 px-4 md:px-16 page-enter">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8 border-b border-[#e6e3d2] pb-6 flex-wrap">
+          <Link
+            to="/orders"
+            className="flex h-10 w-10 items-center justify-center rounded-full border-4 border-[#e6e3d2] bg-white text-[#5b4040] hover:text-brand-500 transition-colors shadow-md shrink-0"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Link>
+          <div className="min-w-[150px]">
+            <h1 className="font-display-hero text-2xl md:text-3xl text-[#1c1c12] uppercase tracking-tight">
+              Order #{order.id}
+            </h1>
+            <p className="text-xs font-label-caps uppercase tracking-wider text-[#5b4040] truncate">
+              {order.restaurant?.name} • {order.createdAt?.split('T')[0]}
+            </p>
+          </div>
+          <span
+            className={`sm:ml-auto text-xs font-label-caps uppercase tracking-wider px-4 py-2 rounded-lg shadow-sm ${
+              isCancelled
+                ? 'bg-red-100 text-red-800 border-2 border-red-200'
+                : order.status === 'DELIVERED'
+                  ? 'bg-emerald-100 text-emerald-800 border-2 border-emerald-200'
+                  : 'bg-brand-100 text-brand-800 border-2 border-brand-200'
+            }`}
+          >
+            {order.status?.replace(/_/g, ' ')}
+          </span>
         </div>
-        <span
-          className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full ${
-            isCancelled
-              ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-              : order.status === 'DELIVERED'
-                ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                : 'bg-brand-100 text-brand-700 dark:bg-brand-500/10 dark:text-brand-400'
-          }`}
-        >
-          {order.status?.replace(/_/g, ' ')}
-        </span>
-      </div>
 
-      <div className="grid gap-5 lg:grid-cols-5">
-        {/* ── Live Map ── */}
-        <div className="lg:col-span-3">
-          <Suspense
-            fallback={
-              <div
-                className="rounded-xl flex items-center justify-center"
-                style={{ height: '400px', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)' }}
+        <div className="grid gap-8 lg:grid-cols-5">
+          {/* ── Live Map ── */}
+          <div className="lg:col-span-3">
+            <div className="border-4 border-[#e6e3d2] rounded-[32px] overflow-hidden bg-white shadow-xl relative" style={{ height: '450px' }}>
+              <Suspense
+                fallback={
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#f1eedd]/50">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-500 border-t-transparent" />
+                  </div>
+                }
               >
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-brand-500 border-t-transparent" />
-              </div>
-            }
-          >
-            <LiveTrackingMap
-              deliveryPos={deliveryPos}
-              customerPos={customerPos}
-              restaurantPos={restaurantPos}
-              restaurantName={order.restaurant?.name}
-              restaurantAddress={order.restaurant?.address}
-              restaurantCity={order.restaurant?.city}
-              customerName={order.user?.name || 'You'}
-              orderId={order.id}
-              connectionStatus={isOutForDelivery ? connectionStatus : 'disconnected'}
-              speed={riderSpeed}
-              mode="customer"
-              height={400}
-            />
-          </Suspense>
+                <LiveTrackingMap
+                  deliveryPos={deliveryPos}
+                  customerPos={customerPos}
+                  restaurantPos={restaurantPos}
+                  restaurantName={order.restaurant?.name}
+                  restaurantAddress={order.restaurant?.address}
+                  restaurantCity={order.restaurant?.city}
+                  customerName={order.user?.name || 'You'}
+                  orderId={order.id}
+                  connectionStatus={isOutForDelivery ? connectionStatus : 'disconnected'}
+                  speed={riderSpeed}
+                  mode="customer"
+                  height={442}
+                />
+              </Suspense>
+            </div>
 
-          {/* Map info bar */}
-          <div className="flex items-center gap-4 mt-2 px-1">
-            {isOutForDelivery && (
-              <div className="flex items-center gap-1.5 text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                {connectionStatus === 'connected' ? (
-                  <>
-                    <Wifi className="h-3 w-3 text-emerald-500" />
-                    <span className="text-emerald-500 font-medium">Live tracking active</span>
-                  </>
-                ) : (
-                  <>
-                    <WifiOff className="h-3 w-3 text-amber-500" />
-                    <span className="text-amber-500 font-medium">
-                      {connectionStatus === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
-            {lastUpdate && (
-              <div className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--text-faint)' }}>
-                <Clock className="h-3 w-3" />
-                Updated {Math.round((Date.now() - lastUpdate) / 1000)}s ago
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right sidebar ── */}
-        <div className="lg:col-span-2 space-y-4">
-          {/* Status Timeline */}
-          <div
-            className="rounded-lg border p-4"
-            style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-          >
-            <h3 className="text-xs font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>
-              Order Status
-            </h3>
-            {isCancelled ? (
-              <div className="flex items-center gap-2 text-red-500">
-                <XCircle className="h-5 w-5" />
-                <div>
-                  <p className="text-sm font-semibold">Order Cancelled</p>
-                  <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                    This order has been cancelled
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-0">
-                {STATUS_STEPS.map((step, idx) => {
-                  const isCompleted = idx <= currentStepIndex;
-                  const isCurrent = idx === currentStepIndex;
-                  const Icon = step.icon;
-                  return (
-                    <div key={step.key} className="flex gap-3">
-                      <div className="flex flex-col items-center">
-                        <div
-                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full transition-colors ${
-                            isCurrent
-                              ? 'bg-brand-500 text-white'
-                              : isCompleted
-                                ? 'bg-emerald-500 text-white'
-                                : 'border'
-                          }`}
-                          style={
-                            !isCompleted && !isCurrent
-                              ? { borderColor: 'var(--border-color)', color: 'var(--text-faint)' }
-                              : isCurrent
-                                ? { boxShadow: '0 0 12px rgba(249,115,22,0.4)' }
-                                : {}
-                          }
-                        >
-                          <Icon className="h-3.5 w-3.5" />
-                        </div>
-                        {idx < STATUS_STEPS.length - 1 && (
-                          <div
-                            className="w-0.5 h-6"
-                            style={{
-                              backgroundColor: isCompleted
-                                ? 'var(--color-brand-500, #f97316)'
-                                : 'var(--border-color)',
-                            }}
-                          />
-                        )}
-                      </div>
-                      <div className="pt-1">
-                        <p
-                          className={`text-xs font-medium ${isCurrent ? 'text-brand-500' : ''}`}
-                          style={{
-                            color: isCurrent ? undefined : isCompleted ? 'var(--text-primary)' : 'var(--text-faint)',
-                          }}
-                        >
-                          {step.label}
-                          {isCurrent && (
-                            <span className="ml-1.5 inline-block h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
-                          )}
-                        </p>
-                        <p className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                          {step.desc}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Delivery Partner Info */}
-          {order.deliveryPartner && (
-            <div
-              className="rounded-lg border p-4"
-              style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-            >
-              <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-                Delivery Partner
-              </h3>
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold"
-                  style={{
-                    background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-                    color: 'white',
-                    boxShadow: '0 4px 12px rgba(139,92,246,0.3)',
-                  }}
-                >
-                  {order.deliveryPartner.name?.charAt(0) || '🛵'}
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                    {order.deliveryPartner.name}
-                  </p>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px]" style={{ color: 'var(--text-muted)' }}>
-                      Delivery Partner
-                    </span>
-                    {isOutForDelivery && connectionStatus === 'connected' && (
-                      <span className="flex items-center gap-1 text-[9px] text-emerald-500 font-medium">
-                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        Live
+            {/* Map info bar */}
+            <div className="flex items-center gap-4 mt-4 px-2">
+              {isOutForDelivery && (
+                <div className="flex items-center gap-1.5 text-xs font-label-caps uppercase tracking-wider">
+                  {connectionStatus === 'connected' ? (
+                    <>
+                      <Wifi className="h-4 w-4 text-emerald-500" />
+                      <span className="text-emerald-500">Live tracking active</span>
+                    </>
+                  ) : (
+                    <>
+                      <WifiOff className="h-4 w-4 text-amber-500 text-stroke-primary" />
+                      <span className="text-amber-500">
+                        {connectionStatus === 'connecting' ? 'Connecting…' : 'Reconnecting…'}
                       </span>
-                    )}
+                    </>
+                  )}
+                </div>
+              )}
+              {lastUpdate && (
+                <div className="flex items-center gap-1.5 text-xs font-label-caps uppercase tracking-wider text-[#5b4040] ml-auto">
+                  <Clock className="h-4 w-4" />
+                  Updated {Math.round((Date.now() - lastUpdate) / 1000)}s ago
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* ── Right sidebar ── */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Status Timeline */}
+            <div className="border-4 border-[#e6e3d2] rounded-[32px] p-6 bg-white shadow-xl">
+              <h3 className="font-headline-lg text-lg uppercase mb-4 text-[#1c1c12]">Order Status</h3>
+              {isCancelled ? (
+                <div className="flex items-center gap-3 text-red-500 bg-red-50 p-4 rounded-2xl border-2 border-red-200">
+                  <XCircle className="h-6 w-6" />
+                  <div>
+                    <p className="text-sm font-headline-md uppercase">Order Cancelled</p>
+                    <p className="text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040]">This order has been cancelled</p>
                   </div>
                 </div>
-                <a
-                  href={`tel:${order.deliveryPartner.phone || ''}`}
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-white transition-transform hover:scale-110"
-                  style={{
-                    background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                    boxShadow: '0 4px 12px rgba(34,197,94,0.3)',
-                  }}
-                >
-                  <Phone className="h-4 w-4" />
-                </a>
+              ) : (
+                <div className="space-y-4">
+                  {STATUS_STEPS.map((step, idx) => {
+                    const isCompleted = idx <= currentStepIndex;
+                    const isCurrent = idx === currentStepIndex;
+                    const Icon = step.icon;
+                    return (
+                      <div key={step.key} className="flex gap-4 items-start">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all ${
+                              isCurrent
+                                ? 'bg-brand-500 border-brand-500 text-white shadow-lg scale-110'
+                                : isCompleted
+                                  ? 'bg-emerald-500 border-emerald-500 text-white'
+                                  : 'border-[#e6e3d2] bg-white text-[#5b4040]/50'
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          {idx < STATUS_STEPS.length - 1 && (
+                            <div
+                              className="w-1 h-8 mt-1 -mb-1"
+                              style={{
+                                backgroundColor: isCompleted
+                                  ? 'var(--color-brand-500, #c41e3a)'
+                                  : '#e6e3d2',
+                              }}
+                            />
+                          )}
+                        </div>
+                        <div className="pt-1 flex-1">
+                          <p
+                            className={`text-xs font-label-caps uppercase tracking-wider ${isCurrent ? 'text-brand-500 font-bold' : isCompleted ? 'text-[#1c1c12]' : 'text-[#5b4040]/55'}`}
+                          >
+                            {step.label}
+                            {isCurrent && (
+                              <span className="ml-2 inline-block h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
+                            )}
+                          </p>
+                          <p className="text-[10px] font-body-md uppercase text-[#5b4040] opacity-80 mt-0.5">
+                            {step.desc}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Delivery Partner Info */}
+            {order.deliveryPartner && (
+              <div className="border-4 border-[#e6e3d2] rounded-[32px] p-6 bg-white shadow-xl">
+                <h3 className="font-headline-lg text-lg uppercase mb-4 text-[#1c1c12]">Delivery Partner</h3>
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full text-base font-headline-md bg-brand-500 text-white shadow-md border-2 border-white">
+                    {order.deliveryPartner.name ? (
+                      order.deliveryPartner.name.charAt(0).toUpperCase()
+                    ) : (
+                      <Truck className="h-5 w-5" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-headline-md text-sm text-[#1c1c12] uppercase truncate">
+                      {order.deliveryPartner.name}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040]">
+                        Courier agent
+                      </span>
+                      {isOutForDelivery && connectionStatus === 'connected' && (
+                        <span className="flex items-center gap-1 text-[9px] font-label-caps uppercase tracking-wider text-emerald-500 font-medium">
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Live map
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <a
+                    href={`tel:${order.deliveryPartner.phone || ''}`}
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-white bg-emerald-500 hover:brightness-110 shadow-lg shrink-0 transition-transform hover:scale-105"
+                  >
+                    <Phone className="h-4.5 w-4.5" />
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {/* Order Summary */}
+            <div className="border-4 border-[#e6e3d2] rounded-[32px] p-6 bg-white shadow-xl">
+              <h3 className="font-headline-lg text-lg uppercase mb-4 text-[#1c1c12]">Order Summary</h3>
+              <div className="space-y-2 text-xs font-label-caps tracking-wider uppercase text-[#5b4040]">
+                <div className="flex justify-between">
+                  <span>Restaurant</span>
+                  <span className="text-[#1c1c12] font-headline-md">{order.restaurant?.name}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Order ID</span>
+                  <span className="text-[#1c1c12] font-headline-md">#{order.id}</span>
+                </div>
+                <div className="flex justify-between items-end pt-2 border-t border-[#e6e3d2]">
+                  <span>Total Amount</span>
+                  <span className="text-brand-500 font-headline-md text-sm">₹{order.totalAmount?.toFixed(0)}</span>
+                </div>
               </div>
             </div>
-          )}
 
-          {/* Order Summary */}
-          <div
-            className="rounded-lg border p-4"
-            style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}
-          >
-            <h3 className="text-xs font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>
-              Order Summary
-            </h3>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span style={{ color: 'var(--text-muted)' }}>Restaurant</span>
-              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                {order.restaurant?.name}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs mb-1">
-              <span style={{ color: 'var(--text-muted)' }}>Order ID</span>
-              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>
-                #{order.id}
-              </span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span style={{ color: 'var(--text-muted)' }}>Total</span>
-              <span className="font-bold text-brand-500">₹{order.totalAmount?.toFixed(2)}</span>
-            </div>
+            {/* Refresh button */}
+            <button
+              onClick={loadOrder}
+              className="w-full flex items-center justify-center gap-2 rounded-full border-4 border-[#e6e3d2] bg-white py-3.5 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12] shadow-md hover:bg-[#f7f4e3] transition-colors"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Tracking
+            </button>
           </div>
-
-          {/* Refresh button */}
-          <button
-            onClick={loadOrder}
-            className="w-full flex items-center justify-center gap-1.5 rounded-lg border py-2 text-xs font-medium transition-colors hover:bg-gray-50 dark:hover:bg-white/5"
-            style={{ borderColor: 'var(--border-color)', color: 'var(--text-muted)' }}
-          >
-            <RefreshCw className="h-3 w-3" />
-            Refresh Order
-          </button>
         </div>
       </div>
     </div>
