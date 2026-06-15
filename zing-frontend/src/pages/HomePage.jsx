@@ -28,7 +28,7 @@ const CATEGORIES = [
   { key: 'pizza', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDbO_l0ElXoJRkTYl-MTO0rn-qs6Y88HIarjem61Owl0yRJkpvuj5K5uUxHqpN8CEF5-vpSpIiMhE2URXQWih67SETehU_LBNWIe4-2d0zKcUvnWpXSmKn3jQZj6G0qUIQVCwa05EhQcP3M_SX8QkUadO2gqHi9lGCUhHEnWx4gm4d91eC80cpDDtkHmvbLZESsGbU31331y6_hqeqN3jmceQTkjnydr0h6H-b3DTXCFL0KeEPf0fouqliqoHdggQTglmEi5wepIg', label: 'Pizza' },
   { key: 'burger', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAl3JSxVE0vGMV0-PUllED7jRZLuWT9zWqZ6FYCq27lK5Rtf4T-o9bF2Dk19cJf4NFCYK4kOQfoH23p7pnNglv31jSNEMnQj7oqk7bQKwb7TL1i2VMDVHDYMbTxcSwV3Ol43sTysEy-ahqsaIaaNnuL6yZERSV7KkxUqNVfC-T8CCAJYdhN2lw3ez9jHSoLRrt5yGpis8AYCcWvTykRLUNFtjOUCOKVDXhko1pnaKY9lf-9u1tYQfOJgD3Td4iw2-6jbQvXhU908A', label: 'Burgers' },
   { key: 'noodles', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDhw4P9EXlVJSiqYzkwDTp3nChxvnNNEkbbsdJdnITknNoSgw4eaEz5qmMMZc3R6AayHxqJnFDdGljaE6l6FEy8efTmwx4D8vglwbUAKj--m54wU2oVhdcKbtJtnfMXuA76yzCZlhd9dHGtR_7YSqOjZq3E70qTAAkhanjUZ86ZICNiZeLh-RRKErdE_oRqM1o1qARDS8uF9rGfldpmkLJ5ZA27DDTL6p145U1MEdcIakLY_Vnmu3OowUpL42ruMA0eVgw8btDqZQ', label: 'Noodles' },
-  { key: 'chicken', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAa_IFsjXdbrth8OD_coKNZ6n0ImF_cO3HhF-U099zXTQO6w4tb-pAfxMVtwc4ivDdWn03MFwj9zg2xGF5mtkkU90nhZOCDVu1naYfnsnG6rv0GNv8TCSo8gsc37manm73zZ8V228_QakSYmS0CUs0XoCPJd7tEjXoSV1pUt_7Z1nr0lDcfr5Stv2E2zHGgTM8SfFCzgTlK4uMKtvfnQNrb7cmQadrMtEh6cYLyvwNfpCEZcU75h1z_6rqnpSxyG_LoH3D5dQRNqw', label: 'Chicken' },
+  { key: 'chicken', image: '/chicken_category.png', label: 'Chicken' },
   { key: 'thali', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBtHXuZ2dLwv9weOYXcofUY3z9ohNAm88MGgQjnNrlh3MtRNNrQ5YYS3Km0Bd-zWRzGSpp8MPCZPwjZGyth66gB7LlcbTzQQE2kSp0IjxvfKTP5z1I55ngsapHjX3UAEmaJnA0lYDnOJrtZPKyDivHumj9esJBNV21mgDNhXSNGNZUFFKG0pWgihzV6vW7fn1Lnx99KsoQfWO1RW1Fgdlfu-MC7Ckfm4Ax8Amn_OMQkROkyEs2_Y15iP5RP0IcYaf0UnCU0FfK27A', label: 'Thali' },
   { key: 'dosa', image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCDldJp0cDeCnVkm7SD1HYGtTBmHmzAFITmuwYbJJ80-OcpO1gCrvnvSICN87Yr6NWth0POectp4xGuNKjyEmdhy6-d2jnN8nQZwNrOeME3bLh7_jeueNP7Bj5Osuqet-QbKrz-hBlm1EJiKBRzRqCdhI-AMNXMmg59kvlS1aqr4J1Gag8Xtn4-32XNKtW2brFu1Uvrtmn47LuHuK18HWUZ0dRFj0wHbj6GvD_OzhoaL6Z8qf0b3eWswhK-M94-tR6dvhE7IY8dGQ', label: 'Dosa' },
   { key: 'rolls', image: 'https://images.unsplash.com/photo-1528736235302-52922df5c122?w=200&q=80', label: 'Rolls' },
@@ -193,7 +193,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Categories Section ── */}
-      <section className="py-24 max-w-6xl mx-auto px-4 md:px-16">
+      <section className="pt-24 pb-8 max-w-6xl mx-auto px-4 md:px-16">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-12 gap-4">
           <div className="flex items-center gap-3">
             <span className="material-symbols-outlined text-brand-500 text-4xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_fire_department</span>
@@ -237,7 +237,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Dynamic Dishes Section ── */}
-      <section className="py-24 max-w-6xl mx-auto px-4 md:px-16 bg-[#fdfae9]">
+      <section className="pt-8 pb-24 max-w-6xl mx-auto px-4 md:px-16 bg-[#fdfae9]">
         <div className="flex flex-col md:flex-row md:justify-between md:items-end mb-12 gap-6">
           <div>
             <div className="flex items-center gap-4 mb-4">
@@ -408,7 +408,7 @@ export default function HomePage() {
             <div className="relative w-full max-w-4xl h-[550px] flex items-center justify-center">
               {/* Collage Images */}
               <div className="absolute top-0 left-0 w-56 h-56 rotate-[-15deg] z-10 rounded-3xl overflow-hidden border-4 border-white shadow-2xl hidden md:block transition-all hover:rotate-0 duration-300">
-                <img className="w-full h-full object-cover" alt="Collage food item 1" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_IFsjXdbrth8OD_coKNZ6n0ImF_cO3HhF-U099zXTQO6w4tb-pAfxMVtwc4ivDdWn03MFwj9zg2xGF5mtkkU90nhZOCDVu1naYfnsnG6rv0GNv8TCSo8gsc37manm73zZ8V228_QakSYmS0CUs0XoCPJd7tEjXoSV1pUt_7Z1nr0lDcfr5Stv2E2zHGgTM8SfFCzgTlK4uMKtvfnQNrb7cmQadrMtEh6cYLyvwNfpCEZcU75h1z_6rqnpSxyG_LoH3D5dQRNqw" />
+                <img className="w-full h-full object-cover" alt="Collage food item 1" src="/chicken_category.png" />
               </div>
               <div className="absolute bottom-10 right-0 w-64 h-64 rotate-[12deg] z-20 rounded-3xl overflow-hidden border-4 border-white shadow-2xl hidden md:block transition-all hover:rotate-0 duration-300">
                 <img className="w-full h-full object-cover" alt="Collage food item 2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAchT80O8wVjQYrhN8lYshizmlVFYP3waG5-8oPrPqzDJAhhxph9KHrWWQrv53-8ZWp4bNFmjyyAKwhMANuZBnRtelN6bWhdKV_zEi6D0kzKfacrvyaerIUwKzZE-zHG7_j2p5xEGZXPbVVOQ7_a9OVBRN5t4CteIDxHhuohlt3eYKm0u9myU2ABADDduTBBhQsxIPteCagltukhaOvuIpgrbrGQFrVy_UrrlNpKY1MrD7DGhGZbclJSIvkxm-ZEggjkxlkze4CCQ" />
@@ -512,30 +512,38 @@ export default function HomePage() {
 
       {/* ── Brand Ticker Section ── */}
       <div className="bg-[#1c1c12] py-6 border-y-4 border-brand-500 overflow-hidden select-none">
-        <div className="flex whitespace-nowrap animate-ticker">
-          <div className="flex items-center gap-12 px-12">
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Burger</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Sandwich</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bakery_dining</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Pizza</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_pizza</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Fries</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>fastfood</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Desserts</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>icecream</span>
-
-            {/* Repeat for seamless animation */}
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Burger</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Sandwich</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bakery_dining</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Pizza</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_pizza</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Fries</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>fastfood</span>
-            <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Desserts</span>
-            <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>icecream</span>
+        <div className="flex whitespace-nowrap w-max animate-ticker">
+          <div className="flex items-center gap-12 px-6">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className="flex items-center gap-12">
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Burger</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Sandwich</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bakery_dining</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Pizza</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_pizza</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Fries</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>fastfood</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Desserts</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>icecream</span>
+              </span>
+            ))}
+          </div>
+          <div className="flex items-center gap-12 px-6">
+            {[...Array(5)].map((_, i) => (
+              <span key={i} className="flex items-center gap-12">
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Burger</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>lunch_dining</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Sandwich</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>bakery_dining</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Pizza</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>local_pizza</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Fries</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>fastfood</span>
+                <span className="text-white font-headline-md text-xl uppercase italic tracking-wider">Desserts</span>
+                <span className="material-symbols-outlined text-brand-500 text-2xl" style={{ fontVariationSettings: "'FILL' 1" }}>icecream</span>
+              </span>
+            ))}
           </div>
         </div>
       </div>
@@ -583,15 +591,15 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Wavy Scalloped Edge Divider */}
-      <div className="relative h-4 w-full z-30 pointer-events-none overflow-hidden -mt-[1px]">
+      {/* Sharp Ticket-Punch Zigzag Divider */}
+      <div className="relative h-4 w-full z-30 pointer-events-none overflow-hidden -mt-[1px] bg-[#1c1c12]">
         <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
           <defs>
-            <pattern id="wavy-bottom" width="24" height="16" patternUnits="userSpaceOnUse">
-              <path d="M 0 0 L 24 0 L 24 4 C 18 12, 6 12, 0 4 Z" fill="#c41e3a" />
+            <pattern id="zigzag-bottom" width="24" height="16" patternUnits="userSpaceOnUse">
+              <path d="M 0 0 L 24 0 L 24 4 L 12 16 L 0 4 Z" fill="#c41e3a" />
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#wavy-bottom)" />
+          <rect width="100%" height="100%" fill="url(#zigzag-bottom)" />
         </svg>
       </div>
 
