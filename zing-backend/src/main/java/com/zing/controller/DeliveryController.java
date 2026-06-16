@@ -7,6 +7,7 @@ import com.zing.model.Order;
 import com.zing.model.User;
 import com.zing.repository.OrderRepository;
 import com.zing.repository.UserRepository;
+import com.zing.service.NotificationService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,10 +21,14 @@ public class DeliveryController {
 
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public DeliveryController(OrderRepository orderRepository, UserRepository userRepository) {
+    public DeliveryController(OrderRepository orderRepository,
+                              UserRepository userRepository,
+                              NotificationService notificationService) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     private User getPartner(Principal principal) {
@@ -76,7 +81,9 @@ public class DeliveryController {
 
         order.setDeliveryPartner(partner);
         order.setStatus(OrderStatus.OUT_FOR_DELIVERY);
-        return ResponseEntity.ok(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        broadcastStatusUpdate(saved);
+        return ResponseEntity.ok(saved);
     }
 
     // 🏁 Mark as delivered
@@ -95,7 +102,9 @@ public class DeliveryController {
 
         order.setStatus(OrderStatus.DELIVERED);
         order.setDeliveredAt(LocalDateTime.now());
-        return ResponseEntity.ok(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        broadcastStatusUpdate(saved);
+        return ResponseEntity.ok(saved);
     }
 
     // 📊 My stats
@@ -172,5 +181,18 @@ public class DeliveryController {
         response.put("status", order.getStatus());
         response.put("partnerName", order.getDeliveryPartner() != null ? order.getDeliveryPartner().getName() : null);
         return ResponseEntity.ok(response);
+    }
+
+    // 📡 Broadcast order status change via WebSocket
+    private void broadcastStatusUpdate(Order order) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("orderId", order.getId());
+        payload.put("status", order.getStatus().name());
+        payload.put("timestamp", System.currentTimeMillis());
+        if (order.getDeliveryPartner() != null) {
+            payload.put("partnerName", order.getDeliveryPartner().getName());
+        }
+        notificationService.notifyUser(
+                "/topic/order-status/" + order.getId(), payload);
     }
 }

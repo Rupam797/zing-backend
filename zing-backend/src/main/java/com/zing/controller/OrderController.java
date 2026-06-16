@@ -6,12 +6,15 @@ import com.zing.exception.BadRequestException;
 import com.zing.exception.ResourceNotFoundException;
 import com.zing.model.Order;
 import com.zing.repository.OrderRepository;
+import com.zing.service.NotificationService;
 import com.zing.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -19,10 +22,14 @@ public class OrderController {
 
     private final OrderService orderService;
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
-    public OrderController(OrderService orderService, OrderRepository orderRepository) {
+    public OrderController(OrderService orderService,
+                           OrderRepository orderRepository,
+                           NotificationService notificationService) {
         this.orderService = orderService;
         this.orderRepository = orderRepository;
+        this.notificationService = notificationService;
     }
 
     // 👤 User: view my orders
@@ -72,7 +79,9 @@ public class OrderController {
             throw new BadRequestException("Only PLACED orders can be accepted");
         }
         order.setStatus(OrderStatus.ACCEPTED);
-        return ResponseEntity.ok(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        broadcastStatusUpdate(saved);
+        return ResponseEntity.ok(saved);
     }
 
     // ❌ Restaurant owner: reject (cancel) order
@@ -84,7 +93,9 @@ public class OrderController {
             throw new BadRequestException("Only PLACED orders can be rejected");
         }
         order.setStatus(OrderStatus.CANCELLED);
-        return ResponseEntity.ok(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        broadcastStatusUpdate(saved);
+        return ResponseEntity.ok(saved);
     }
 
     // 🍳 Restaurant owner: mark order as preparing
@@ -96,6 +107,21 @@ public class OrderController {
             throw new BadRequestException("Only ACCEPTED orders can be marked as preparing");
         }
         order.setStatus(OrderStatus.PREPARING);
-        return ResponseEntity.ok(orderRepository.save(order));
+        Order saved = orderRepository.save(order);
+        broadcastStatusUpdate(saved);
+        return ResponseEntity.ok(saved);
+    }
+
+    // 📡 Broadcast order status change via WebSocket
+    private void broadcastStatusUpdate(Order order) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("orderId", order.getId());
+        payload.put("status", order.getStatus().name());
+        payload.put("timestamp", System.currentTimeMillis());
+        if (order.getDeliveryPartner() != null) {
+            payload.put("partnerName", order.getDeliveryPartner().getName());
+        }
+        notificationService.notifyUser(
+                "/topic/order-status/" + order.getId(), payload);
     }
 }

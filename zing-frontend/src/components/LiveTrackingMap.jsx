@@ -27,7 +27,7 @@ async function geocodeAddress(address) {
 }
 
 /* ──────────────────────────────────────────────────────────────
-   Haversine distance (km)
+   Haversine distance (km) — used as fallback
    ────────────────────────────────────────────────────────────── */
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -47,6 +47,60 @@ function formatETA(distKm, speedKmH) {
   if (mins < 1) return 'Arriving now';
   if (mins === 1) return '1 min away';
   return `${mins} min away`;
+}
+
+function formatDuration(seconds) {
+  const mins = Math.round(seconds / 60);
+  if (mins < 1) return 'Arriving now';
+  if (mins === 1) return '1 min away';
+  return `${mins} min away`;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   OSRM Route Fetching with cache + debounce
+   ────────────────────────────────────────────────────────────── */
+const osrmCache = new Map();
+const OSRM_BASE = 'https://router.project-osrm.org/route/v1/driving';
+
+function osrmCacheKey(coords) {
+  // Round to 4 decimals (~11m precision) for effective caching
+  return coords.map((c) => `${c.lng.toFixed(4)},${c.lat.toFixed(4)}`).join(';');
+}
+
+async function fetchOSRMRoute(waypoints) {
+  if (waypoints.length < 2) return null;
+
+  const key = osrmCacheKey(waypoints);
+  if (osrmCache.has(key)) return osrmCache.get(key);
+
+  try {
+    const coordStr = waypoints.map((c) => `${c.lng},${c.lat}`).join(';');
+    const url = `${OSRM_BASE}/${coordStr}?overview=full&geometries=geojson&steps=true`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.code !== 'Ok' || !data.routes?.[0]) return null;
+
+    const route = data.routes[0];
+    const result = {
+      geometry: route.geometry.coordinates.map(([lng, lat]) => [lat, lng]), // Leaflet uses [lat, lng]
+      distance: route.distance / 1000, // meters → km
+      duration: route.duration,         // seconds
+      steps: route.legs.flatMap((leg) =>
+        leg.steps.map((step) => ({
+          instruction: step.maneuver?.type || '',
+          modifier: step.maneuver?.modifier || '',
+          name: step.name || '',
+          distance: step.distance,
+          duration: step.duration,
+        }))
+      ),
+    };
+    osrmCache.set(key, result);
+    return result;
+  } catch {
+    return null;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────
@@ -144,11 +198,13 @@ export default function LiveTrackingMap({
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const markersRef = useRef({ rider: null, restaurant: null, customer: null });
-  const polylineRef = useRef(null);
+  const routeLinesRef = useRef({ toRider: null, toCustomer: null, fallback: null });
   const [status, setStatus] = useState('loading');
   const [eta, setEta] = useState(null);
   const [distance, setDistance] = useState(null);
+  const [routeSource, setRouteSource] = useState(null); // 'osrm' | 'straight'
   const restaurantGeocoded = useRef(null);
+  const lastRouteReqTime = useRef(0);
 
   /* ── Geocode restaurant address if coords not provided ── */
   const getRestaurantCoords = useCallback(async () => {
@@ -159,6 +215,126 @@ export default function LiveTrackingMap({
     if (coords) restaurantGeocoded.current = coords;
     return coords;
   }, [restaurantPosProp, restaurantAddress, restaurantCity]);
+
+  /* ── Remove all route lines from map ── */
+  function clearRouteLines(map) {
+    Object.keys(routeLinesRef.current).forEach((key) => {
+      if (routeLinesRef.current[key]) {
+        map.removeLayer(routeLinesRef.current[key]);
+        routeLinesRef.current[key] = null;
+      }
+    });
+  }
+
+  /* ── Draw OSRM road routes or fall back to straight lines ── */
+  async function updateRoutes(map, restCoords, riderCoords, custCoords) {
+    clearRouteLines(map);
+    if (!L) return;
+
+    // Debounce: at most 1 OSRM request per 5 seconds
+    const now = Date.now();
+    const timeSinceLast = now - lastRouteReqTime.current;
+    const shouldFetchOSRM = timeSinceLast >= 5000;
+
+    let usedOSRM = false;
+
+    if (shouldFetchOSRM) {
+      lastRouteReqTime.current = now;
+
+      // Segment 1: Restaurant → Rider (completed leg)
+      if (restCoords && riderCoords) {
+        const route = await fetchOSRMRoute([restCoords, riderCoords]);
+        if (route?.geometry?.length >= 2) {
+          routeLinesRef.current.toRider = L.polyline(route.geometry, {
+            color: '#8b5cf6',
+            weight: 5,
+            opacity: 0.9,
+            lineCap: 'round',
+            lineJoin: 'round',
+            className: 'route-glow',
+          }).addTo(map);
+          usedOSRM = true;
+        }
+      }
+
+      // Segment 2: Rider → Customer (remaining leg)
+      if (riderCoords && custCoords) {
+        const route = await fetchOSRMRoute([riderCoords, custCoords]);
+        if (route?.geometry?.length >= 2) {
+          routeLinesRef.current.toCustomer = L.polyline(route.geometry, {
+            color: '#8b5cf6',
+            weight: 4,
+            dashArray: '10, 8',
+            opacity: 0.7,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(map);
+          usedOSRM = true;
+
+          // Use OSRM distance + duration for ETA
+          setDistance(route.distance);
+          setEta(formatDuration(route.duration));
+          setRouteSource('osrm');
+        }
+      } else if (restCoords && custCoords && !riderCoords) {
+        // No rider yet — show full route Restaurant → Customer
+        const route = await fetchOSRMRoute([restCoords, custCoords]);
+        if (route?.geometry?.length >= 2) {
+          routeLinesRef.current.toCustomer = L.polyline(route.geometry, {
+            color: '#8b5cf6',
+            weight: 4,
+            dashArray: '10, 8',
+            opacity: 0.6,
+            lineCap: 'round',
+            lineJoin: 'round',
+          }).addTo(map);
+          usedOSRM = true;
+          setDistance(route.distance);
+          setRouteSource('osrm');
+        }
+      }
+    }
+
+    // Fallback: straight-line polylines if OSRM didn't work
+    if (!usedOSRM) {
+      const points = [];
+      if (restCoords) points.push([restCoords.lat, restCoords.lng]);
+      if (riderCoords) points.push([riderCoords.lat, riderCoords.lng]);
+      if (custCoords) points.push([custCoords.lat, custCoords.lng]);
+
+      if (points.length >= 2) {
+        routeLinesRef.current.fallback = L.polyline(points, {
+          color: '#8b5cf6',
+          weight: 3,
+          dashArray: '8, 8',
+          lineCap: 'round',
+          opacity: 0.8,
+        }).addTo(map);
+      }
+
+      // Haversine ETA fallback
+      if (riderCoords && custCoords) {
+        const dist = haversineKm(riderCoords.lat, riderCoords.lng, custCoords.lat, custCoords.lng);
+        const speedKmH = speed ? (speed * 3.6) : null;
+        setDistance(dist);
+        setEta(formatETA(dist, speedKmH));
+        setRouteSource('straight');
+      }
+    }
+  }
+
+  /* ── Fit bounds helper ── */
+  function fitMapBounds(map, restCoords, riderCoords, custCoords) {
+    const pts = [];
+    if (restCoords) pts.push([restCoords.lat, restCoords.lng]);
+    if (riderCoords) pts.push([riderCoords.lat, riderCoords.lng]);
+    if (custCoords) pts.push([custCoords.lat, custCoords.lng]);
+    if (pts.length >= 2) {
+      map.fitBounds(L.latLngBounds(pts), { padding: [50, 50] });
+    } else if (pts.length === 1) {
+      map.setView(pts[0], 15);
+    }
+  }
 
   /* ── Init map ── */
   useEffect(() => {
@@ -186,7 +362,7 @@ export default function LiveTrackingMap({
       const restCoords = await getRestaurantCoords();
       if (!mounted) return;
 
-      const center = deliveryPos || restCoords || customerPos || { lat: 22.5726, lng: 88.3639 };
+      const center = deliveryPos || restCoords || customerPos || { lat: 12.9716, lng: 77.5946 };
 
       const map = L.map(mapRef.current, {
         center: [center.lat, center.lng],
@@ -199,19 +375,22 @@ export default function LiveTrackingMap({
       // Dark CARTO basemap
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
         attribution:
-          '© <a href="https://www.openstreetmap.org/copyright">OSM</a> © <a href="https://carto.com/">CARTO</a>',
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
         subdomains: 'abcd',
         maxZoom: 20,
       }).addTo(map);
 
-      // Add CSS animation for pulse
-      if (!document.getElementById('live-track-pulse-css')) {
+      // Add CSS animations for pulse and route glow
+      if (!document.getElementById('live-track-css')) {
         const style = document.createElement('style');
-        style.id = 'live-track-pulse-css';
+        style.id = 'live-track-css';
         style.textContent = `
           @keyframes liveTrackPulse {
             0%, 100% { transform: scale(1); opacity: 0.3; }
             50% { transform: scale(1.6); opacity: 0.08; }
+          }
+          .route-glow {
+            filter: drop-shadow(0 0 6px rgba(139, 92, 246, 0.5));
           }
         `;
         document.head.appendChild(style);
@@ -258,8 +437,8 @@ export default function LiveTrackingMap({
           `);
       }
 
-      // Route polyline
-      updatePolyline(map, restCoords, deliveryPos, customerPos);
+      // Draw OSRM road routes
+      await updateRoutes(map, restCoords, deliveryPos, customerPos);
 
       // Fit bounds
       fitMapBounds(map, restCoords, deliveryPos, customerPos);
@@ -276,6 +455,7 @@ export default function LiveTrackingMap({
         mapInstance.current = null;
       }
       markersRef.current = { rider: null, restaurant: null, customer: null };
+      routeLinesRef.current = { toRider: null, toCustomer: null, fallback: null };
     };
   }, [orderId]); // Only re-init on orderId change
 
@@ -298,17 +478,9 @@ export default function LiveTrackingMap({
         `);
     }
 
-    // Update polyline and bounds
+    // Update route with OSRM
     const restCoords = restaurantPosProp || restaurantGeocoded.current;
-    updatePolyline(mapInstance.current, restCoords, deliveryPos, customerPos);
-
-    // Calculate ETA
-    if (customerPos && deliveryPos) {
-      const dist = haversineKm(deliveryPos.lat, deliveryPos.lng, customerPos.lat, customerPos.lng);
-      const speedKmH = speed ? (speed * 3.6) : null;
-      setDistance(dist);
-      setEta(formatETA(dist, speedKmH));
-    }
+    updateRoutes(mapInstance.current, restCoords, deliveryPos, customerPos);
   }, [deliveryPos?.lat, deliveryPos?.lng]);
 
   /* ── Update customer marker ── */
@@ -329,42 +501,6 @@ export default function LiveTrackingMap({
         `);
     }
   }, [customerPos?.lat, customerPos?.lng]);
-
-  /* ── Polyline helper ── */
-  function updatePolyline(map, restCoords, riderCoords, custCoords) {
-    if (polylineRef.current) {
-      map.removeLayer(polylineRef.current);
-      polylineRef.current = null;
-    }
-
-    const points = [];
-    if (restCoords) points.push([restCoords.lat, restCoords.lng]);
-    if (riderCoords) points.push([riderCoords.lat, riderCoords.lng]);
-    if (custCoords) points.push([custCoords.lat, custCoords.lng]);
-
-    if (points.length >= 2) {
-      polylineRef.current = L.polyline(points, {
-        color: '#8b5cf6',
-        weight: 3,
-        dashArray: '8, 8',
-        lineCap: 'round',
-        opacity: 0.8,
-      }).addTo(map);
-    }
-  }
-
-  /* ── Fit bounds helper ── */
-  function fitMapBounds(map, restCoords, riderCoords, custCoords) {
-    const pts = [];
-    if (restCoords) pts.push([restCoords.lat, restCoords.lng]);
-    if (riderCoords) pts.push([riderCoords.lat, riderCoords.lng]);
-    if (custCoords) pts.push([custCoords.lat, custCoords.lng]);
-    if (pts.length >= 2) {
-      map.fitBounds(L.latLngBounds(pts), { padding: [50, 50] });
-    } else if (pts.length === 1) {
-      map.setView(pts[0], 15);
-    }
-  }
 
   /* ── Connection status indicator ── */
   const statusColors = {
@@ -467,12 +603,19 @@ export default function LiveTrackingMap({
               Drop-off
             </span>
           </div>
-          {distance !== null && (
-            <span className="flex items-center gap-1 text-white/60">
-              <Navigation className="h-3 w-3" />
-              {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(1)}km`}
-            </span>
-          )}
+          <div className="flex items-center gap-2.5">
+            {distance !== null && (
+              <span className="flex items-center gap-1 text-white/60">
+                <Navigation className="h-3 w-3" />
+                {distance < 1 ? `${(distance * 1000).toFixed(0)}m` : `${distance.toFixed(1)}km`}
+              </span>
+            )}
+            {routeSource && (
+              <span className="text-white/30 text-[8px] uppercase tracking-wider">
+                {routeSource === 'osrm' ? '• Road route' : '• Straight line'}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>

@@ -20,6 +20,14 @@ const STATUS_STEPS = [
   { key: 'DELIVERED',        icon: CheckCircle, label: 'Delivered',        desc: 'Enjoy your meal!' },
 ];
 
+const STATUS_TOAST_MSG = {
+  ACCEPTED: '✅ Restaurant accepted your order!',
+  PREPARING: '👨‍🍳 Your food is being prepared!',
+  OUT_FOR_DELIVERY: '🚀 Your order is on its way!',
+  DELIVERED: '🎉 Your order has been delivered!',
+  CANCELLED: '❌ Your order was cancelled.',
+};
+
 /* ── Geocoding helper ── */
 const geocodeCache = new Map();
 async function geocodeAddress(address) {
@@ -56,9 +64,10 @@ export default function OrderTrackingPage() {
   const geo = useGeolocation({ enabled: true });
   const customerPos = geo.lat && geo.lng ? { lat: geo.lat, lng: geo.lng } : null;
 
-  // WebSocket for real-time rider location
+  // ── WebSocket: always connect for active orders ──
+  const isActive = order && !['DELIVERED', 'CANCELLED'].includes(order.status);
   const isOutForDelivery = order?.status === 'OUT_FOR_DELIVERY';
-  const { connectionStatus, subscribe } = useStompClient({ enabled: isOutForDelivery });
+  const { connectionStatus, subscribe } = useStompClient({ enabled: !!isActive });
 
   /* ── Load order data ── */
   useEffect(() => {
@@ -93,6 +102,33 @@ export default function OrderTrackingPage() {
     }
   };
 
+  /* ── Subscribe to instant order status updates via WebSocket ── */
+  useEffect(() => {
+    if (!isActive) return;
+
+    const unsub = subscribe(`/topic/order-status/${id}`, (data) => {
+      if (data.status) {
+        // Show toast notification for the status change
+        const msg = STATUS_TOAST_MSG[data.status];
+        if (msg) {
+          if (data.status === 'CANCELLED') {
+            toast.error(msg);
+          } else {
+            toast.success(msg);
+          }
+        }
+
+        // Update order status locally for instant UI feedback
+        setOrder((prev) => prev ? { ...prev, status: data.status } : prev);
+
+        // Full reload for complete data (partner info, etc.)
+        loadOrder();
+      }
+    });
+
+    return () => unsub();
+  }, [isActive, id, subscribe]);
+
   /* ── Subscribe to WebSocket location updates ── */
   useEffect(() => {
     if (!isOutForDelivery) return;
@@ -108,7 +144,7 @@ export default function OrderTrackingPage() {
     return () => unsub();
   }, [isOutForDelivery, id, subscribe]);
 
-  /* ── Auto-refresh order status every 15s ── */
+  /* ── Fallback: auto-refresh order status every 30s ── */
   useEffect(() => {
     if (!order || order.status === 'DELIVERED' || order.status === 'CANCELLED') return;
     const interval = setInterval(async () => {
@@ -116,7 +152,7 @@ export default function OrderTrackingPage() {
         const res = await api.get(`/orders/my/${id}`);
         setOrder(res.data);
       } catch {}
-    }, 15000);
+    }, 30000);
     return () => clearInterval(interval);
   }, [order?.status, id]);
 
@@ -204,12 +240,12 @@ export default function OrderTrackingPage() {
 
             {/* Map info bar */}
             <div className="flex items-center gap-4 mt-4 px-2">
-              {isOutForDelivery && (
+              {isActive && (
                 <div className="flex items-center gap-1.5 text-xs font-label-caps uppercase tracking-wider">
                   {connectionStatus === 'connected' ? (
                     <>
                       <Wifi className="h-4 w-4 text-emerald-500" />
-                      <span className="text-emerald-500">Live tracking active</span>
+                      <span className="text-emerald-500">Live updates active</span>
                     </>
                   ) : (
                     <>

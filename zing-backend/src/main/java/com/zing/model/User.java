@@ -23,6 +23,12 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
+    @Column(length = 500)
+    private String deliveryAddress;
+
+    private Double deliveryLat;
+    private Double deliveryLng;
+
     public User() {}
 
     public Long getId() {
@@ -71,5 +77,29 @@ public class User {
 
     public void setRole(Role role) {
         this.role = role;
+    }
+
+    public String getDeliveryAddress() {
+        return deliveryAddress;
+    }
+
+    public void setDeliveryAddress(String deliveryAddress) {
+        this.deliveryAddress = deliveryAddress;
+    }
+
+    public Double getDeliveryLat() {
+        return deliveryLat;
+    }
+
+    public void setDeliveryLat(Double deliveryLat) {
+        this.deliveryLat = deliveryLat;
+    }
+
+    public Double getDeliveryLng() {
+        return deliveryLng;
+    }
+
+    public void setDeliveryLng(Double deliveryLng) {
+        this.deliveryLng = deliveryLng;
     }
 }

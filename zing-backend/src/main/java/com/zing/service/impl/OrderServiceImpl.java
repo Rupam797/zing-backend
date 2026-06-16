@@ -59,6 +59,15 @@ public class OrderServiceImpl implements OrderService {
         order.setStatus(OrderStatus.PLACED);
         order.setCreatedAt(LocalDateTime.now());
 
+        // Store delivery address & customer GPS
+        if (request.getDeliveryAddress() != null) {
+            order.setDeliveryAddress(request.getDeliveryAddress());
+        }
+        if (request.getCustomerLat() != null && request.getCustomerLng() != null) {
+            order.setCustomerLat(request.getCustomerLat());
+            order.setCustomerLng(request.getCustomerLng());
+        }
+
         // Calculate total and save order first
         double total = 0;
         List<OrderItem> orderItems = new ArrayList<>();

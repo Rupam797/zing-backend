@@ -2,9 +2,10 @@ import { useNavigate } from 'react-router-dom';
 import { Minus, Plus, Trash2, ArrowLeft, MapPin, Tag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { imageUrl } from '../api/upload';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import { useAuth } from '../context/AuthContext';
 
 const DELIVERY_FEE = 30;
 const PLATFORM_FEE = 5;
@@ -12,10 +13,139 @@ const PLATFORM_FEE = 5;
 export default function CartPage() {
   const { items, total, restaurantId, updateQuantity, removeItem, clearCart } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
+
   const [placing, setPlacing] = useState(false);
-  const [address, setAddress] = useState('');
   const [coupon, setCoupon] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
+
+  // Address states
+  const [houseNo, setHouseNo] = useState('');
+  const [buildingName, setBuildingName] = useState('');
+  const [street, setStreet] = useState('');
+  const [area, setArea] = useState('');
+  const [cityStatePin, setCityStatePin] = useState('');
+  const [lat, setLat] = useState(null);
+  const [lng, setLng] = useState(null);
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      if (user.deliveryLat) setLat(user.deliveryLat);
+      if (user.deliveryLng) setLng(user.deliveryLng);
+
+      if (user.deliveryAddress) {
+        try {
+          const parsed = JSON.parse(user.deliveryAddress);
+          if (parsed && typeof parsed === 'object') {
+            setHouseNo(parsed.houseNo || '');
+            setBuildingName(parsed.buildingName || '');
+            setStreet(parsed.street || '');
+            setArea(parsed.area || '');
+            setCityStatePin(parsed.cityStatePin || '');
+            setIsEditing(false);
+            return;
+          }
+        } catch (e) {
+          // Plain text fallback
+          setStreet(user.deliveryAddress);
+          setHouseNo('');
+          setBuildingName('');
+          setArea('');
+          setCityStatePin('');
+          setIsEditing(false);
+          return;
+        }
+      }
+      setIsEditing(true);
+    }
+  }, [user]);
+
+  const getFullAddressString = () => {
+    const parts = [
+      houseNo ? `Flat/House ${houseNo}` : '',
+      buildingName,
+      street,
+      area,
+      cityStatePin
+    ].filter(Boolean);
+    return parts.join(', ');
+  };
+
+  const detectLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser');
+      return;
+    }
+    setLoadingLocation(true);
+
+    const successCallback = async (position) => {
+      const { latitude, longitude } = position.coords;
+      setLat(latitude);
+      setLng(longitude);
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&addressdetails=1&zoom=18`,
+          { headers: { 'User-Agent': 'zing-delivery-app/1.0' } }
+        );
+        const data = await response.json();
+        const a = data.address || {};
+
+        const house = a.house_number || a.house_name || '';
+        setHouseNo(house);
+
+        const bldg = a.building || a.apartment || a.residential || '';
+        setBuildingName(bldg);
+
+        const road = a.road || a.pedestrian || a.footway || a.path || '';
+        setStreet(road);
+
+        const areaName = a.neighbourhood || a.suburb || a.city_district || a.village || '';
+        setArea(areaName);
+
+        const city = a.city || a.town || a.county || '';
+        const state = a.state || '';
+        const postcode = a.postcode || '';
+        const cityParts = [city, state, postcode].filter(Boolean);
+        setCityStatePin(cityParts.join(', '));
+
+        toast.success('Location detected! 📍');
+      } catch (err) {
+        console.error(err);
+        toast.error('Failed to resolve address details');
+      } finally {
+        setLoadingLocation(false);
+      }
+    };
+
+    const finalErrorCallback = (error) => {
+      console.error('Geolocation final error:', error);
+      if (error.code === error.PERMISSION_DENIED) {
+        toast.toast ? toast.toast : toast.error('Location permission denied. Please allow location access in your browser settings.');
+      } else if (error.code === error.TIMEOUT) {
+        toast.error('Location request timed out. Please enter address manually.');
+      } else {
+        toast.error('Unable to retrieve location. Please check system settings or enter manually.');
+      }
+      setLoadingLocation(false);
+    };
+
+    // Try high accuracy first (5s timeout), fallback to low accuracy (10s timeout)
+    navigator.geolocation.getCurrentPosition(
+      successCallback,
+      (error) => {
+        console.warn('High accuracy geolocation failed, trying low accuracy fallback...', error);
+        navigator.geolocation.getCurrentPosition(
+          successCallback,
+          finalErrorCallback,
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 10000 }
+        );
+      },
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+    );
+  };
 
   const discount = couponApplied ? Math.round(total * 0.1) : 0;
   const grandTotal = total + DELIVERY_FEE + PLATFORM_FEE - discount;
@@ -31,17 +161,40 @@ export default function CartPage() {
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) return;
-    if (!address.trim()) {
+
+    const fullAddress = getFullAddressString();
+    if (!fullAddress.trim()) {
       toast.error('Please enter a delivery address');
+      setIsEditing(true);
       return;
     }
+
     setPlacing(true);
     try {
+      // 1. Save address coordinates and structured text to profile
+      const addressPayload = {
+        houseNo,
+        buildingName,
+        street,
+        area,
+        cityStatePin
+      };
+      await api.put('/users/me/address', {
+        deliveryAddress: JSON.stringify(addressPayload),
+        deliveryLat: lat,
+        deliveryLng: lng
+      });
+
+      // 2. Place order with coordinates and full address
       await api.post('/orders', {
         restaurantId,
         items: items.map(({ menuItem, quantity }) => ({ menuItemId: menuItem.id, quantity })),
+        deliveryAddress: fullAddress,
+        customerLat: lat,
+        customerLng: lng
       });
-      toast.success('Order placed! 🎉 Track it in My Orders.');
+
+      toast.success('Order placed! 🎉');
       clearCart();
       navigate('/orders');
     } catch (err) {
@@ -134,16 +287,140 @@ export default function CartPage() {
 
         {/* Delivery Address */}
         <div className="mb-6 border-4 border-[#e6e3d2] rounded-[28px] p-6 bg-white shadow-md">
-          <label className="flex items-center gap-2 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12] mb-3">
-            <MapPin className="h-4 w-4 text-brand-500" /> Delivery Address
-          </label>
-          <textarea
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            placeholder="Enter your full delivery address..."
-            rows={2}
-            className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3.5 text-xs outline-none transition-all text-[#1c1c12] resize-none"
-          />
+          <div className="flex items-center justify-between mb-4 border-b border-dashed border-[#e6e3d2] pb-3">
+            <label className="flex items-center gap-2 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12]">
+              <MapPin className="h-4.5 w-4.5 text-brand-500" /> Delivery Address
+            </label>
+            {!isEditing && (
+              <button
+                type="button"
+                onClick={() => setIsEditing(true)}
+                className="text-xs font-label-caps text-brand-500 hover:underline flex items-center gap-1"
+              >
+                <span className="material-symbols-outlined text-sm">edit</span> Change
+              </button>
+            )}
+          </div>
+
+          {!isEditing ? (
+            <div className="space-y-2">
+              <div className="p-4 bg-[#fdfae9] rounded-2xl border-2 border-dashed border-brand-500/30">
+                <p className="text-xs font-bold text-[#1c1c12] uppercase tracking-wide mb-1">Delivering to:</p>
+                <p className="text-sm font-semibold text-[#5b4040] leading-relaxed">
+                  {getFullAddressString()}
+                </p>
+                {lat && lng && (
+                  <p className="text-[10px] text-brand-500 font-mono mt-2 flex items-center gap-1">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
+                    GPS: {lat.toFixed(5)}, {lng.toFixed(5)} (Stored)
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 bg-[#fdfae9] p-3 rounded-2xl border-2 border-[#e6e3d2]">
+                <span className="text-xs text-[#5b4040] font-medium">Auto-fill via GPS location:</span>
+                <button
+                  type="button"
+                  onClick={detectLocation}
+                  disabled={loadingLocation}
+                  className="flex items-center gap-2 rounded-xl bg-brand-500 text-white px-4 py-2 text-xs font-label-caps uppercase tracking-wider hover:brightness-110 disabled:opacity-50 transition-all shadow-sm"
+                >
+                  {loadingLocation ? (
+                    <>
+                      <span className="h-3 w-3 animate-spin rounded-full border border-white border-t-transparent" />
+                      Locating...
+                    </>
+                  ) : (
+                    <>
+                      <span className="material-symbols-outlined text-sm">my_location</span>
+                      Locate Me
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040] mb-1.5">
+                    House / Flat / Plot No. & Floor
+                  </label>
+                  <input
+                    type="text"
+                    value={houseNo}
+                    onChange={(e) => setHouseNo(e.target.value)}
+                    placeholder="e.g. Flat 302, 3rd Floor"
+                    className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3 text-xs outline-none transition-all text-[#1c1c12]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040] mb-1.5">
+                    Building / Apartment / Builder Name
+                  </label>
+                  <input
+                    type="text"
+                    value={buildingName}
+                    onChange={(e) => setBuildingName(e.target.value)}
+                    placeholder="e.g. Royal Crest Apartments"
+                    className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3 text-xs outline-none transition-all text-[#1c1c12]"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040] mb-1.5">
+                  Street / Road / Landmark
+                </label>
+                <input
+                  type="text"
+                  value={street}
+                  onChange={(e) => setStreet(e.target.value)}
+                  placeholder="e.g. 10th Main Road, near Metro Station"
+                  className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3 text-xs outline-none transition-all text-[#1c1c12]"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040] mb-1.5">
+                    Area / Locality
+                  </label>
+                  <input
+                    type="text"
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    placeholder="e.g. Indiranagar"
+                    className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3 text-xs outline-none transition-all text-[#1c1c12]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-label-caps uppercase tracking-wider text-[#5b4040] mb-1.5">
+                    City, State & Pincode
+                  </label>
+                  <input
+                    type="text"
+                    value={cityStatePin}
+                    onChange={(e) => setCityStatePin(e.target.value)}
+                    placeholder="e.g. Bengaluru, Karnataka - 560038"
+                    className="w-full rounded-2xl border-4 border-[#e6e3d2] focus:border-brand-500 bg-white px-4 py-3 text-xs outline-none transition-all text-[#1c1c12]"
+                  />
+                </div>
+              </div>
+
+              {getFullAddressString() && (
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsEditing(false)}
+                    className="rounded-xl border-2 border-brand-500 text-brand-500 px-5 py-2 text-xs font-label-caps uppercase tracking-wider hover:bg-brand-50 transition-colors shadow-sm"
+                  >
+                    Confirm & Save Address
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Coupon */}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
-import { Package, ArrowRight, MapPin, RefreshCw } from 'lucide-react';
+import useStompClient from '../hooks/useStompClient';
+import { Package, ArrowRight, MapPin, RefreshCw, Wifi } from 'lucide-react';
 
 const statusColor = (s) => ({
   PLACED:           'bg-blue-100 text-blue-800 border-2 border-blue-200',
@@ -13,9 +14,24 @@ const statusColor = (s) => ({
   CANCELLED:        'bg-red-100 text-red-800 border-2 border-red-200',
 }[s] || 'bg-[#e6e3d2] text-[#1c1c12] border-2 border-[#e6e3d2]');
 
+const STATUS_TOAST_MSG = {
+  ACCEPTED: '✅ Your order was accepted!',
+  PREPARING: '👨‍🍳 Your food is being prepared!',
+  OUT_FOR_DELIVERY: '🚀 Your order is out for delivery!',
+  DELIVERED: '🎉 Your order has been delivered!',
+  CANCELLED: '❌ Your order was cancelled.',
+};
+
 export default function MyOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Connect WebSocket if there are any active (non-terminal) orders
+  const activeOrders = orders.filter(
+    (o) => !['DELIVERED', 'CANCELLED'].includes(o.status)
+  );
+  const hasActive = activeOrders.length > 0;
+  const { connectionStatus, subscribe } = useStompClient({ enabled: hasActive });
 
   useEffect(() => { loadOrders(); }, []);
 
@@ -29,6 +45,35 @@ export default function MyOrdersPage() {
       setLoading(false);
     }
   };
+
+  // Subscribe to status updates for all active orders
+  useEffect(() => {
+    if (!hasActive) return;
+
+    const unsubs = activeOrders.map((o) =>
+      subscribe(`/topic/order-status/${o.id}`, (data) => {
+        if (data.status) {
+          // Show toast
+          const msg = STATUS_TOAST_MSG[data.status];
+          if (msg) {
+            if (data.status === 'CANCELLED') toast.error(msg);
+            else toast.success(msg);
+          }
+
+          // Update order status in list immediately
+          setOrders((prev) =>
+            prev.map((order) =>
+              order.id === data.orderId
+                ? { ...order, status: data.status }
+                : order
+            )
+          );
+        }
+      })
+    );
+
+    return () => unsubs.forEach((unsub) => unsub());
+  }, [hasActive, activeOrders.map((o) => o.id).join(','), subscribe]);
 
   if (loading) {
     return (
@@ -47,7 +92,15 @@ export default function MyOrdersPage() {
               <span className="material-symbols-outlined text-brand-500 text-3xl" style={{ fontVariationSettings: "'FILL' 1" }}>receipt_long</span>
               <h1 className="font-headline-lg text-3xl text-[#1c1c12] uppercase italic">My Orders</h1>
             </div>
-            <p className="text-[#5b4040] font-body-lg text-sm uppercase tracking-wide">{orders.length} order{orders.length !== 1 ? 's' : ''} placed total</p>
+            <p className="text-[#5b4040] font-body-lg text-sm uppercase tracking-wide flex items-center gap-2">
+              {orders.length} order{orders.length !== 1 ? 's' : ''} placed total
+              {hasActive && connectionStatus === 'connected' && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-label-caps uppercase tracking-wider text-emerald-500">
+                  <Wifi className="h-3 w-3" />
+                  Live
+                </span>
+              )}
+            </p>
           </div>
           <button onClick={loadOrders} className="flex items-center gap-2 rounded-full border-4 border-[#e6e3d2] px-6 py-2.5 text-xs font-label-caps uppercase tracking-wider text-[#1c1c12] bg-white shadow-md hover:bg-[#f7f4e3] transition-colors">
             <RefreshCw className="h-3.5 w-3.5" /> Refresh
